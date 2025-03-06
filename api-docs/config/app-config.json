@@ -1,12 +1,12 @@
 {
   "features": {
     "auth": {
-      "enabled": false,
+      "enabled": true,
       "provider": "github",
       "whitelist": "whitelist.txt"
     },
     "theme": {
-      "darkMode": true,
+      "darkMode": false,
       "colorScheme": "blue"
     }
   },
