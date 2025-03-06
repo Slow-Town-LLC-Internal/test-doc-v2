@@ -1,50 +1,90 @@
-name: Collect API Specs
+name: Collect API Specifications
+
+# This workflow is currently disabled to allow for local testing first
+# Uncomment the section below to enable it
+# on:
+#   workflow_dispatch:  # Manual trigger
+#   schedule:
+#     - cron: '0 4 * * 1-5'  # Run at 4 AM UTC on weekdays
 
 on:
-  # Allow manual trigger
+  # Placeholder to disable workflow
   workflow_dispatch:
-  
-  # Run on schedule (commented out for now)
-  # schedule:
-  #   - cron: '0 0 * * *'  # Run daily at midnight UTC
-  
-  # Run when specific files change on main branch
-  push:
-    branches:
-      - main
-    paths:
-      - 'config/sources.json'
-      - '.github/workflows/collect-specs.yml'
-      - 'scripts/collect-specs.ts'
+    inputs:
+      enable_workflow:
+        description: 'Set to true to run this workflow (currently disabled by default)'
+        required: true
+        default: 'false'
 
 jobs:
-  collect:
+  collect-specs:
     runs-on: ubuntu-latest
+    if: github.event.inputs.enable_workflow == 'true'
     
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '16'
           cache: 'npm'
+          cache-dependency-path: 'api-docs/package-lock.json'
       
       - name: Install dependencies
-        run: npm ci
-      
-      # To be implemented in Phase 3
-      - name: Collect API specifications
-        run: echo "API spec collection will be implemented in Phase 3"
-        # run: npm run collect-specs
-      
-      # To be implemented in Phase 3
-      - name: Commit changes if needed
         run: |
-          echo "Committing changes will be implemented in Phase 3"
-          # git config user.name "GitHub Actions Bot"
-          # git config user.email "actions@github.com"
-          # git add public/api-specs/
-          # git diff --quiet && git diff --staged --quiet || git commit -m "Update API specifications"
-          # git push
+          cd api-docs
+          npm ci
+      
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+      
+      - name: Checkout Prisma repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository_owner }}/prisma
+          path: ./repos/prisma
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Checkout WaltID repository
+        uses: actions/checkout@v3
+        with:
+          repository: walt-id/waltid-identity
+          path: ./repos/waltid-identity
+      
+      - name: Update source paths
+        run: |
+          cd api-docs
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const configPath = path.join(process.cwd(), 'config', 'sources.json');
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            
+            // Update paths to use GitHub workspace paths
+            config.apis.forEach(api => {
+              if (api.localPath) {
+                api.localPath = api.localPath.replace('/Users/arbeitandy/src/repos', '${GITHUB_WORKSPACE}/repos');
+              }
+            });
+            
+            fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+          "
+      
+      - name: Run API spec collection script
+        run: |
+          cd api-docs
+          npm run collect-specs
+      
+      - name: Commit changes if specs updated
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          
+          git add api-docs/public/api-specs/
+          git diff --staged --quiet || (git commit -m "Update API specifications [skip ci]" && git push)
