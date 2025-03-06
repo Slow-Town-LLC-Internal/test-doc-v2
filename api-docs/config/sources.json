@@ -1,0 +1,10 @@
+{
+  "apis": [
+    {
+      "id": "platform",
+      "name": "Platform API",
+      "specPath": "/api-specs/platform-api.json",
+      "version": "1.0.0"
+    }
+  ]
+}

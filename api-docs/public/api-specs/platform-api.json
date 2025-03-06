@@ -1,0 +1,5861 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "iDen2 APIs",
+    "version": "1.0.0",
+    "description": "Interact with the iden2 APIs.\nAny HTTP status code of 200 - 299 indicates request success, 400 - 499 client error / invalid request, 500+ internal server processing exception."
+  },
+  "components": {
+    "securitySchemes": {
+      "authMiddleware": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "authMiddleware": []
+    }
+  ],
+  "paths": {
+    "/api/passkeys/checkIfRegistered": {
+      "post": {
+        "summary": "Check if a user is registered based on their username.",
+        "tags": [
+          "Passkeys"
+        ],
+        "requestBody": {
+          "description": "Request body containing the username to check.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userName": {
+                    "type": "string",
+                    "description": "A unique string with a minimum of 10 characters, which may include letters and numbers, identifying the user.",
+                    "example": "user123456",
+                    "minLength": 10
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User registration status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "The user data if the user is registered; otherwise null.",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "The unique UUID of the user."
+                        },
+                        "username": {
+                          "type": "string",
+                          "description": "The username of the user."
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "The timestamp when the user was created."
+                        },
+                        "lastUsed": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "The timestamp when the user was last active."
+                        },
+                        "webauthnCredentials": {
+                          "type": "object",
+                          "description": "The WebAuthn credentials associated with the user."
+                        }
+                      }
+                    },
+                    "isRegistered": {
+                      "type": "boolean",
+                      "description": "Indicates whether the user is registered.",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation errors."
+          },
+          "500": {
+            "description": "Server error."
+          }
+        }
+      }
+    },
+    "/api/passkeys/generate-registration-options": {
+      "post": {
+        "summary": "Generate WebAuthn registration options for a user.",
+        "tags": [
+          "Passkeys"
+        ],
+        "requestBody": {
+          "description": "Request body to generate registration options.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userNameToUse": {
+                    "type": "string",
+                    "description": "The username to associate with the registration.",
+                    "example": "exampleUser"
+                  },
+                  "providedUserId": {
+                    "type": "string",
+                    "description": "(Optional) The user ID for the registration process. A new user ID will be generated if not provided.",
+                    "example": "user123"
+                  },
+                  "requiresPasskeyReset": {
+                    "type": "boolean",
+                    "description": "(Optional) Indicates whether a passkey reset is required.",
+                    "example": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration options generated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "object",
+                      "description": "WebAuthn registration options."
+                    },
+                    "challenge": {
+                      "type": "string",
+                      "description": "The base64url-encoded challenge string for the registration process.",
+                      "example": "base64urlChallenge"
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "A signed JWT for secure communication.",
+                      "example": "signedJwtToken"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation errors."
+          },
+          "500": {
+            "description": "Internal Server Error - Unable to generate registration options."
+          }
+        }
+      }
+    },
+    "/api/passkeys/verify-registration": {
+      "post": {
+        "summary": "Verify the WebAuthn registration response from the user.",
+        "tags": [
+          "Passkeys"
+        ],
+        "requestBody": {
+          "description": "WebAuthn registration response for verification.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Base64-encoded ID of the authenticator.",
+                    "example": "base64Id"
+                  },
+                  "rawId": {
+                    "type": "string",
+                    "description": "Base64-encoded raw ID of the authenticator.",
+                    "example": "base64RawId"
+                  },
+                  "clientDataJSON": {
+                    "type": "string",
+                    "description": "JSON-encoded client data sent by the authenticator.",
+                    "example": "{...}"
+                  },
+                  "attestationObject": {
+                    "type": "string",
+                    "description": "Attestation data from the authenticator.",
+                    "example": "{...}"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Token associated with the registration challenge.",
+                    "example": "secureToken"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration verified successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the registration was verified successfully.",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Optional success message.",
+                      "example": "Authentication successful!"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "description": "The ID of the registered user.",
+                      "example": "user123"
+                    },
+                    "authToken": {
+                      "type": "string",
+                      "description": "JWT token for authenticated sessions.",
+                      "example": "jwtTokenHere"
+                    },
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "New recovery codes generated during the process (if applicable).",
+                      "example": [
+                        "code1",
+                        "code2"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation errors or verification failures.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the issue.",
+                      "example": "Verification failed: Required data missing."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message indicating the issue with the token.",
+                      "example": "Unauthorized: Invalid token."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Verification could not be completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the server issue.",
+                      "example": "Internal server error. Please try again later."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/passkeys/verify-recovery": {
+      "post": {
+        "summary": "Verify recovery details provided by the user.",
+        "tags": [
+          "Passkeys"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recoveryCode": {
+                    "type": "string",
+                    "description": "The recovery code provided by the user.",
+                    "example": "exampleRecoveryCode"
+                  },
+                  "recoveryScenario": {
+                    "type": "string",
+                    "description": "The scenario for recovery, either \"fullRecovery\".",
+                    "example": "fullRecovery"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recovery verified successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the recovery operation was successful.",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "A success message indicating the recovery operation's result.",
+                      "example": "Full recovery successful. Proceed to register a new passkey."
+                    },
+                    "userId": {
+                      "type": "string",
+                      "description": "The ID of the user recovered in the `fullRecovery` scenario.",
+                      "example": "user123"
+                    },
+                    "userName": {
+                      "type": "string",
+                      "description": "The username associated with the recovery code.",
+                      "example": "exampleUser"
+                    },
+                    "requiresPasskeyReset": {
+                      "type": "boolean",
+                      "description": "Indicates whether the user must register a new passkey.",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation errors or invalid recovery scenario/code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the recovery operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the issue.",
+                      "example": "Invalid recovery scenario"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Recovery verification failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the recovery operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the server issue.",
+                      "example": "An error occurred during recovery verification."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/passkeys/generate-authentication-options": {
+      "post": {
+        "summary": "Generate WebAuthn authentication options for a user.",
+        "tags": [
+          "Passkeys"
+        ],
+        "requestBody": {
+          "description": "Request body to generate authentication options.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "credId": {
+                    "type": "string",
+                    "description": "Credential ID to generate authentication options for.",
+                    "example": "exampleCredentialId"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication options generated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "options": {
+                      "type": "object",
+                      "description": "WebAuthn authentication options.",
+                      "properties": {
+                        "challenge": {
+                          "type": "object",
+                          "description": "Challenge object provided by the FIDO2 library.",
+                          "example": {}
+                        },
+                        "timeout": {
+                          "type": "integer",
+                          "description": "Timeout in milliseconds for authentication.",
+                          "example": 60000
+                        },
+                        "rpId": {
+                          "type": "string",
+                          "description": "Relying Party ID (e.g., domain name or localhost).",
+                          "example": "localhost"
+                        },
+                        "userVerification": {
+                          "type": "string",
+                          "description": "Level of user verification required.",
+                          "example": "required"
+                        }
+                      }
+                    },
+                    "challenge": {
+                      "type": "string",
+                      "description": "Base64url-encoded challenge for the authentication process.",
+                      "example": "R1iYiKZF3spRzJ7VggkjHjzHN0J0c52txh4gLYcF3b5JHi8cfnZjiyL7JyLeVFSXf9iio+VKUw0+SNN9jIcCUbDt/jEarFuhCC+GdTBXR9jACgxA/ehMBBNKpNI/9jhQUNUemFvwhW+01diofxkOR+BCuvD8CHB1zJIMJbem9e4="
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the validation issue.",
+                      "example": "Credential ID is required."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Authentication options generation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the server issue.",
+                      "example": "Failed to generate authentication options."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/passkeys/verify-authentication": {
+      "post": {
+        "summary": "Verify the WebAuthn authentication response from the user.",
+        "tags": [
+          "Passkeys"
+        ],
+        "requestBody": {
+          "description": "WebAuthn authentication response for verification.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientDataJSON": {
+                    "type": "string",
+                    "description": "JSON-encoded client data sent by the authenticator.",
+                    "example": "{...}"
+                  },
+                  "authenticatorData": {
+                    "type": "string",
+                    "description": "Authenticator data provided by the authenticator.",
+                    "example": "{...}"
+                  },
+                  "signature": {
+                    "type": "string",
+                    "description": "Signature generated by the authenticator.",
+                    "example": "exampleSignature"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "Base64-encoded authenticator ID.",
+                    "example": "base64Id"
+                  },
+                  "rawId": {
+                    "type": "string",
+                    "description": "Base64-encoded raw authenticator ID.",
+                    "example": "base64RawId"
+                  },
+                  "expectedUserId": {
+                    "type": "string",
+                    "description": "User ID expected to match during authentication.",
+                    "example": "user123"
+                  },
+                  "challenge": {
+                    "type": "string",
+                    "description": "Challenge string to verify against.",
+                    "example": "challengeString"
+                  },
+                  "username": {
+                    "type": "string",
+                    "description": "(Optional) Username of the user attempting to authenticate.",
+                    "example": "testUser"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication verified successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the authentication was successful.",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "A message describing the result of the authentication.",
+                      "example": "Authentication successful!"
+                    },
+                    "authToken": {
+                      "type": "string",
+                      "description": "A JWT token for the authenticated session.",
+                      "example": "exampleAuthToken"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation errors or authentication failures.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the validation or authentication issue.",
+                      "example": "Authentication verification failed."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Authentication process failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates whether the operation was successful.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message detailing the server issue.",
+                      "example": "An error occurred during verification."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/passkeys/logout": {
+      "post": {
+        "summary": "Log the user out and clear authentication tokens.",
+        "tags": [
+          "Passkeys"
+        ],
+        "requestBody": {
+          "description": "Token required for logging out the user.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "waltIdToken": {
+                    "type": "string",
+                    "description": "The WaltID token used for logging out the user.",
+                    "example": "user-authentication-token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged out successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates if the logout was successful.",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Message indicating successful logout.",
+                      "example": "Logged out successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or invalid token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates if the operation failed.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message indicating the problem.",
+                      "example": "Token is required for logout"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Logout process failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Indicates if the operation failed.",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message indicating the server issue.",
+                      "example": "An error occurred during logout"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/holder/update-transaction": {
+      "post": {
+        "summary": "Update a transaction",
+        "tags": [
+          "Holder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "status"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "url": "https://example.com/transaction/123",
+                "status": "completed"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Transaction status updated successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "404": {
+            "description": "Issued credential not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/holder/update-verified-transaction": {
+      "post": {
+        "summary": "Update a verified transaction",
+        "tags": [
+          "Holder"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "status"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "url": "https://example.com/transaction/123",
+                "status": "completed"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Transaction status updated successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "404": {
+            "description": "Verified credential not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/holder/user-info": {
+      "get": {
+        "summary": "Get user information",
+        "tags": [
+          "Holder"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "user123",
+                  "email": "user@example.com",
+                  "name": "John Doe"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/holder/create-idv-vc": {
+      "post": {
+        "summary": "Create a new wallet with identity verification",
+        "tags": [
+          "Holder"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "givenName": {
+                    "type": "string",
+                    "description": "Given name of the user",
+                    "example": "John"
+                  },
+                  "familyName": {
+                    "type": "string",
+                    "description": "Family name of the user",
+                    "example": "Doe"
+                  },
+                  "mobileNo": {
+                    "type": "string",
+                    "description": "Valid mobile number (e.g., en-US, en-IN)",
+                    "example": "9254787890"
+                  },
+                  "dob": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Date of birth in ISO format",
+                    "example": "1990-01-01"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Residential address",
+                    "example": "123 Main St, Apt 4B"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "City of residence",
+                    "example": "New York"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State of residence",
+                    "example": "NY"
+                  },
+                  "zipcode": {
+                    "type": "string",
+                    "description": "Postal or ZIP code",
+                    "example": "10001"
+                  }
+                }
+              },
+              "required": [
+                "givenName",
+                "familyName",
+                "mobileNo",
+                "dob",
+                "address",
+                "city",
+                "state",
+                "zipcode"
+              ]
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique identifier of the created wallet",
+                      "example": "wallet123"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the created wallet",
+                      "example": "My Wallet"
+                    },
+                    "createdOn": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Timestamp of when the wallet was created",
+                      "example": "2023-06-01T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (Validation errors)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": {
+                            "type": "string",
+                            "description": "The field that caused the validation error",
+                            "example": "givenName"
+                          },
+                          "message": {
+                            "type": "string",
+                            "description": "Validation error message",
+                            "example": "Given name is required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/keycloak/token": {
+      "get": {
+        "tags": [
+          "Keycloak Authentication"
+        ],
+        "summary": "Returns Keycloak access token",
+        "description": "Returns an access token to be used for all further operations towards Keycloak. Required Keycloak configuration in oidc.conf.",
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/keycloak/login": {
+      "post": {
+        "tags": [
+          "Keycloak Authentication"
+        ],
+        "summary": "Keycloak login with username and password",
+        "description": "Login of a user managed by Keycloak.",
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "keycloak"
+                    ]
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "type": "keycloak",
+                "username": "Max_Mustermann",
+                "password": "password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/keycloak/create": {
+      "post": {
+        "tags": [
+          "Keycloak Authentication"
+        ],
+        "summary": "Keycloak registration with username, email, and password",
+        "description": "Creates a user in the configured Keycloak instance.",
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "email",
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "keycloak"
+                    ]
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "type": "keycloak",
+                "email": "user@email.com",
+                "username": "Max_Mustermann",
+                "password": "password",
+                "token": "eyJhb..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration succeeded"
+          },
+          "400": {
+            "description": "Registration failed"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/keycloak/logout": {
+      "post": {
+        "tags": [
+          "Keycloak Authentication"
+        ],
+        "summary": "Logout via Keycloak provider",
+        "description": "Terminates Keycloak and wallet session by the user identified by the Keycloak user ID.",
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "keycloakUserId",
+                  "token"
+                ],
+                "properties": {
+                  "keycloakUserId": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "keycloakUserId": "3d09 ...",
+                "token": "eyJhb ..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logout successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/registry": {
+      "get": {
+        "summary": "List registered DIDs",
+        "tags": [
+          "Registry"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of (DID) strings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/registry/{did}": {
+      "get": {
+        "summary": "Show a specific DID document",
+        "tags": [
+          "Registry"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "did",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The DID to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The DID document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "DID not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/settings": {
+      "get": {
+        "summary": "Get wallet settings",
+        "tags": [
+          "Settings"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Wallet ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet settings object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error fetching wallet settings"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      },
+      "post": {
+        "summary": "Update wallet settings",
+        "tags": [
+          "Settings"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Wallet ID"
+          }
+        ],
+        "requestBody": {
+          "description": "Wallet setting object",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet settings updated successfully"
+          },
+          "400": {
+            "description": "Error updating wallet settings"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/issuer/transaction": {
+      "get": {
+        "summary": "Get transactions for the authenticated issuer",
+        "tags": [
+          "Issuer"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of transactions retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "txn123456",
+                    "issuer_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "holder_email": "holder@example.com",
+                    "credential": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+                    "credential_type": "VerifiableCredential",
+                    "url": "https://example.com/credential/123",
+                    "status": "issued"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new transaction",
+        "tags": [
+          "Issuer"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "credential": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+                "credentialType": "VerifiableCredential",
+                "url": "https://example.com/credential/123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "txn123456",
+                  "issuer_id": "550e8400-e29b-41d4-a716-446655440000",
+                  "credential": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+                  "credential_type": "VerifiableCredential",
+                  "url": "https://example.com/credential/123",
+                  "status": "pending"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/verified-transaction": {
+      "get": {
+        "summary": "Get verified transactions for the authenticated issuer",
+        "tags": [
+          "Issuer"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of verified transactions retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "vtxn123456",
+                    "issuer_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "holder_email": "holder@example.com",
+                    "credential": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+                    "credential_type": "VerifiableCredential",
+                    "url": "https://example.com/verified-credential/123",
+                    "status": "verified"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new verified transaction",
+        "tags": [
+          "Issuer"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "credential": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+                "credentialType": "VerifiableCredential",
+                "url": "https://example.com/verified-credential/123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Verified transaction created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "vtxn123456",
+                  "issuer_id": "550e8400-e29b-41d4-a716-446655440000",
+                  "credential": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+                  "credential_type": "VerifiableCredential",
+                  "url": "https://example.com/verified-credential/123",
+                  "status": "pending"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a verified transaction",
+        "tags": [
+          "Issuer"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "url": "https://example.com/verified-credential/123",
+                "status": "verified"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified transaction updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "vtxn123456",
+                  "issuer_id": "550e8400-e29b-41d4-a716-446655440000",
+                  "holder_email": "holder@example.com",
+                  "credential": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...",
+                  "credential_type": "VerifiableCredential",
+                  "url": "https://example.com/verified-credential/123",
+                  "status": "verified"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Transaction not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/.well-known/openid-configuration": {
+      "get": {
+        "summary": "Get OpenID configuration",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenID configuration retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "issuer": "https://example.com",
+                  "authorization_endpoint": "https://example.com/authorize",
+                  "token_endpoint": "https://example.com/token",
+                  "userinfo_endpoint": "https://example.com/userinfo",
+                  "jwks_uri": "https://example.com/jwks"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/.well-known/openid-credential-issuer": {
+      "get": {
+        "summary": "Get OpenID credential issuer",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenID credential issuer retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "credential_issuer": "https://example.com",
+                  "credential_endpoint": "https://example.com/credentials",
+                  "credentials_supported": [
+                    {
+                      "format": "jwt_vc",
+                      "types": [
+                        "VerifiableCredential",
+                        "UniversityDegreeCredential"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/.well-known/oauth-authorization-server": {
+      "get": {
+        "summary": "Get OAuth authorization server",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth authorization server retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "issuer": "https://example.com",
+                  "authorization_endpoint": "https://example.com/authorize",
+                  "token_endpoint": "https://example.com/token",
+                  "registration_endpoint": "https://example.com/register"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/.well-known/jwt-issuer": {
+      "get": {
+        "summary": "Get JWT issuer",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "responses": {
+          "200": {
+            "description": "JWT issuer retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "issuer": "https://example.com",
+                  "jwks_uri": "https://example.com/jwks"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/par": {
+      "post": {
+        "summary": "Pushed Authorization Request",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "client_id": "client_12345",
+                "response_type": "code",
+                "scope": "openid profile",
+                "redirect_uri": "https://client.example.com/callback"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PAR successful",
+            "content": {
+              "application/json": {
+                "example": {
+                  "request_uri": "urn:ietf:params:oauth:request_uri:6esc_11ACC5bwc014ltc14eY22c",
+                  "expires_in": 3600
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/jwks": {
+      "get": {
+        "summary": "Get JSON Web Key Set",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "responses": {
+          "200": {
+            "description": "JWKS retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "keys": [
+                    {
+                      "kty": "RSA",
+                      "use": "sig",
+                      "kid": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg",
+                      "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
+                      "e": "AQAB"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/authorize": {
+      "get": {
+        "summary": "Authorization endpoint",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "response_type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "code"
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "client_12345"
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "https://client.example.com/callback"
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "openid profile"
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "af0ifjsldkj"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to client with authorization code"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/onboard/issuer": {
+      "post": {
+        "summary": "Onboard a new issuer",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "key": {
+                  "backend": "jwk",
+                  "keyType": "Ed25519"
+                },
+                "did": {
+                  "method": "key"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Issuer onboarded successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "issuerKey": {
+                    "type": "jwk",
+                    "jwk": {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+                    }
+                  },
+                  "issuerDid": "did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLtZ9XE"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/raw/jwt/sign": {
+      "post": {
+        "summary": "Sign a raw JWT",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": null,
+              "example": {
+                "issuerKey": {
+                  "type": "jwk",
+                  "jwk": {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+                    "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+                  }
+                },
+                "issuerDid": "did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLtZ9XE",
+                "subjectDid": "did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLtZ9XF",
+                "credentialData": {
+                  "@context": [
+                    "https://www.w3.org/2018/credentials/v1"
+                  ],
+                  "type": [
+                    "VerifiableCredential",
+                    "UniversityDegreeCredential"
+                  ],
+                  "credentialSubject": {
+                    "degree": {
+                      "type": "BachelorDegree",
+                      "name": "Bachelor of Science and Arts"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT signed successfully",
+            "content": {
+              "text/plain": {
+                "example": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkaWQ6a2V5Ono2TWtqUmFnTmlNdTkxRGR1dkN2Z0VzcUxaRFZ6ckp6RnJ3YWhjNHRYTHRaOVhFIiwic3ViIjoiZGlkOmtleTp6Nk1ralJhZ05pTXU5MURkdXZDdmdFc3FMWkRWenJKekZyd2FoYzR0WEx0WjlYRiIsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJVbml2ZXJzaXR5RGVncmVlQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJkZWdyZWUiOnsidHlwZSI6IkJhY2hlbG9yRGVncmVlIiwibmFtZSI6IkJhY2hlbG9yIG9mIFNjaWVuY2UgYW5kIEFydHMifX19fQ.1iLu8DJYqB3TAiEp41AJgNt4cHBzVkHCRzcEJcdPCPkq1peCgN3o2UBaRGUuw8J8mcM5QDGpjDmC1MHHHY9xBg"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/openid4vc/jwt/issue": {
+      "post": {
+        "summary": "Issue a JWT credential",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "statusCallbackUri",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Callback URI for status updates"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "issuerKey": {
+                  "type": "jwk",
+                  "jwk": {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+                    "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+                  }
+                },
+                "issuerDid": "did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLtZ9XE",
+                "credentialConfigurationId": "UniversityDegreeCredential",
+                "credentialData": {
+                  "@context": [
+                    "https://www.w3.org/2018/credentials/v1"
+                  ],
+                  "type": [
+                    "VerifiableCredential",
+                    "UniversityDegreeCredential"
+                  ],
+                  "credentialSubject": {
+                    "degree": {
+                      "type": "BachelorDegree",
+                      "name": "Bachelor of Science and Arts"
+                    }
+                  }
+                },
+                "mapping": {
+                  "id": "<uuid>",
+                  "issuer": {
+                    "id": "<issuerDid>"
+                  },
+                  "credentialSubject": {
+                    "id": "<subjectDid>"
+                  },
+                  "issuanceDate": "<timestamp>",
+                  "expirationDate": "<timestamp-in:365d>"
+                },
+                "authenticationMethod": "PRE_AUTHORIZED"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT credential issued successfully",
+            "content": {
+              "text/plain": {
+                "example": "openid-credential-offer://localhost/?credential_offer=%7B%22credential_issuer%22%3A%22http%3A%2F%2Flocalhost%3A8000%22%2C%22credentials%22%3A%5B%22UniversityDegreeCredential%22%5D%2C%22grants%22%3A%7B%22authorization_code%22%3A%7B%22issuer_state%22%3A%22501414a4-c461-43f0-84b2-c628730c7c02%22%7D%7D%7D"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/openid4vc/jwt/issueBatch": {
+      "post": {
+        "summary": "Issue a batch of JWT credentials",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "statusCallbackUri",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Callback URI for status updates"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array"
+              },
+              "example": [
+                {
+                  "issuerKey": {
+                    "type": "jwk",
+                    "jwk": {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+                      "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+                    }
+                  },
+                  "issuerDid": "did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLtZ9XE",
+                  "credentialConfigurationId": "UniversityDegreeCredential",
+                  "credentialData": {
+                    "@context": [
+                      "https://www.w3.org/2018/credentials/v1"
+                    ],
+                    "type": [
+                      "VerifiableCredential",
+                      "UniversityDegreeCredential"
+                    ],
+                    "credentialSubject": {
+                      "degree": {
+                        "type": "BachelorDegree",
+                        "name": "Bachelor of Science and Arts"
+                      }
+                    }
+                  },
+                  "mapping": {
+                    "id": "<uuid>",
+                    "issuer": {
+                      "id": "<issuerDid>"
+                    },
+                    "credentialSubject": {
+                      "id": "<subjectDid>"
+                    },
+                    "issuanceDate": "<timestamp>",
+                    "expirationDate": "<timestamp-in:365d>"
+                  },
+                  "authenticationMethod": "PRE_AUTHORIZED"
+                }
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch of JWT credentials issued successfully",
+            "content": {
+              "text/plain": {
+                "example": "openid-credential-offer://localhost/?credential_offer=%7B%22credential_issuer%22%3A%22http%3A%2F%2Flocalhost%3A8000%22%2C%22credentials%22%3A%5B%22UniversityDegreeCredential%22%5D%2C%22grants%22%3A%7B%22authorization_code%22%3A%7B%22issuer_state%22%3A%22501414a4-c461-43f0-84b2-c628730c7c02%22%7D%7D%7D"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/openid4vc/sdjwt/issue": {
+      "post": {
+        "summary": "Issue an SD-JWT credential",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "statusCallbackUri",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Callback URI for status updates"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "issuerKey": {
+                  "type": "jwk",
+                  "jwk": {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+                    "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+                  }
+                },
+                "issuerDid": "did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLtZ9XE",
+                "credentialConfigurationId": "OpenBadgeCredential_jwt_vc",
+                "credentialData": {
+                  "@context": [
+                    "https://www.w3.org/2018/credentials/v1",
+                    "https://purl.imsglobal.org/spec/ob/v3p0/context.json"
+                  ],
+                  "type": [
+                    "VerifiableCredential",
+                    "OpenBadgeCredential"
+                  ],
+                  "name": "Example Badge",
+                  "credentialSubject": {
+                    "type": [
+                      "AchievementSubject"
+                    ],
+                    "achievement": {
+                      "name": "Achievement Name",
+                      "description": "Achievement Description"
+                    }
+                  }
+                },
+                "mapping": {
+                  "id": "<uuid>",
+                  "issuer": {
+                    "id": "<issuerDid>"
+                  },
+                  "credentialSubject": {
+                    "id": "<subjectDid>"
+                  },
+                  "issuanceDate": "<timestamp>",
+                  "expirationDate": "<timestamp-in:365d>"
+                },
+                "selectiveDisclosure": {
+                  "fields": {
+                    "name": {
+                      "sd": true
+                    }
+                  },
+                  "decoyMode": "NONE",
+                  "decoys": 0
+                },
+                "authenticationMethod": "PRE_AUTHORIZED"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SD-JWT credential issued successfully",
+            "content": {
+              "text/plain": {
+                "example": "openid-credential-offer://localhost/?credential_offer=%7B%22credential_issuer%22%3A%22http%3A%2F%2Flocalhost%3A8000%22%2C%22credentials%22%3A%5B%22OpenBadgeCredential%22%5D%2C%22grants%22%3A%7B%22authorization_code%22%3A%7B%22issuer_state%22%3A%22501414a4-c461-43f0-84b2-c628730c7c02%22%7D%7D%7D"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/openid4vc/sdjwt/issueBatch": {
+      "post": {
+        "summary": "Issue a batch of SD-JWT credentials",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "statusCallbackUri",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Callback URI for status updates"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array"
+              },
+              "example": [
+                {
+                  "issuerKey": {
+                    "type": "jwk",
+                    "jwk": {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+                      "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+                    }
+                  },
+                  "issuerDid": "did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLtZ9XE",
+                  "credentialConfigurationId": "OpenBadgeCredential_jwt_vc",
+                  "credentialData": {
+                    "@context": [
+                      "https://www.w3.org/2018/credentials/v1",
+                      "https://purl.imsglobal.org/spec/ob/v3p0/context.json"
+                    ],
+                    "type": [
+                      "VerifiableCredential",
+                      "OpenBadgeCredential"
+                    ],
+                    "name": "Example Badge",
+                    "credentialSubject": {
+                      "type": [
+                        "AchievementSubject"
+                      ],
+                      "achievement": {
+                        "name": "Achievement Name",
+                        "description": "Achievement Description"
+                      }
+                    }
+                  },
+                  "mapping": {
+                    "id": "<uuid>",
+                    "issuer": {
+                      "id": "<issuerDid>"
+                    },
+                    "credentialSubject": {
+                      "id": "<subjectDid>"
+                    },
+                    "issuanceDate": "<timestamp>",
+                    "expirationDate": "<timestamp-in:365d>"
+                  },
+                  "selectiveDisclosure": {
+                    "fields": {
+                      "name": {
+                        "sd": true
+                      }
+                    },
+                    "decoyMode": "NONE",
+                    "decoys": 0
+                  },
+                  "authenticationMethod": "PRE_AUTHORIZED"
+                }
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch of SD-JWT credentials issued successfully",
+            "content": {
+              "text/plain": {
+                "example": "openid-credential-offer://localhost/?credential_offer=%7B%22credential_issuer%22%3A%22http%3A%2F%2Flocalhost%3A8000%22%2C%22credentials%22%3A%5B%22OpenBadgeCredential%22%5D%2C%22grants%22%3A%7B%22authorization_code%22%3A%7B%22issuer_state%22%3A%22501414a4-c461-43f0-84b2-c628730c7c02%22%7D%7D%7D"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/openid4vc/mdoc/issue": {
+      "post": {
+        "summary": "Issue an mDOC credential",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "statusCallbackUri",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Callback URI for status updates"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "issuerKey": {
+                  "type": "jwk",
+                  "jwk": {
+                    "kty": "EC",
+                    "crv": "P-256",
+                    "x": "G0RINBiF-oQUD3d5DGnegQuXenI29JDaMGoMvioKRBM",
+                    "y": "ed3eFGs2pEtrp7vAZ7BLcbrUtpKkYWAT2JPUQK4lN4E"
+                  }
+                },
+                "issuerDid": "",
+                "credentialConfigurationId": "org.iso.18013.5.1.mDL",
+                "mdocData": {
+                  "org.iso.18013.5.1": {
+                    "family_name": "Doe",
+                    "given_name": "John",
+                    "birth_date": "1980-01-02"
+                  }
+                },
+                "authenticationMethod": "PRE_AUTHORIZED",
+                "x5Chain": [
+                  "-----BEGIN CERTIFICATE-----\nMIIBRzCB7qADAgECAgg57ch6mnj5KjAKBggqhkjOPQQDAjAXMRUwEwYDVQQDDAxNRE9DIFJPT1QgQ0EwHhcNMjQwNTAyMTMxMzMwWhcNMjUwNTAyMTMxMzMwWjAbMRkwFwYDVQQDDBBNRE9DIFRlc3QgSXNzdWVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEG0RINBiF+oQUD3d5DGnegQuXenI29JDaMGoMvioKRBN53d4UazakS2unu8BnsEtxutS2kqRhYBPYk9RAriU3gaMgMB4wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwCgYIKoZIzj0EAwIDSAAwRQIhAI5wBBAA3ewqIwslhuzFn4rNFW9dkz2TY7xeImO7CraYAiAYhai1NzJ6abAiYg8HxcRdYpO4bu2Sej8E6CzFHK34Yw==\n-----END CERTIFICATE-----"
+                ],
+                "trustedRootCAs": [
+                  "-----BEGIN CERTIFICATE-----\nMIIBQzCB66ADAgECAgjbHnT+6LsrbDAKBggqhkjOPQQDAjAYMRYwFAYDVQQDDA1NRE9DIFJPT1QgQ1NQMB4XDTI0MDUwMjEzMTMzMFoXDTI0MDUwMzEzMTMzMFowFzEVMBMGA1UEAwwMTURPQyBST09UIENBMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWP0sG+CkjItZ9KfM3sLF+rLGb8HYCfnlsIH/NWJjiXkTx57ryDLYfTU6QXYukVKHSq6MEebvQPqTJT1blZ/xeKMgMB4wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCAQYwCgYIKoZIzj0EAwIDRwAwRAIgWM+JtnhdqbTzFD1S3byTvle0n/6EVALbkKCbdYGLn8cCICOoSETqwk1oPnJEEPjUbdR4txiNqkHQih8HKAQoe8t5\n-----END CERTIFICATE-----"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "mDOC credential issued successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "issuanceUrl": "openid-credential-offer://localhost/?credential_offer=%7B%22credential_issuer%22%3A%22http%3A%2F%2Flocalhost%3A8000%22%2C%22credentials%22%3A%5B%22org.iso.18013.5.1.mDL%22%5D%2C%22grants%22%3A%7B%22authorization_code%22%3A%7B%22issuer_state%22%3A%22501414a4-c461-43f0-84b2-c628730c7c02%22%7D%7D%7D"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/issuer/openid4vc/credentialOffer": {
+      "get": {
+        "summary": "Get a credential offer",
+        "tags": [
+          "OpenID4VC"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The ID of the credential offer",
+            "example": "501414a4-c461-43f0-84b2-c628730c7c02"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential offer retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "credential_issuer": "http://localhost:8000",
+                  "credentials": [
+                    {
+                      "format": "jwt_vc_json",
+                      "types": [
+                        "VerifiableCredential",
+                        "UniversityDegreeCredential"
+                      ]
+                    }
+                  ],
+                  "grants": {
+                    "authorization_code": {
+                      "issuer_state": "501414a4-c461-43f0-84b2-c628730c7c02"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "404": {
+            "description": "Credential offer not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/issuers": {
+      "get": {
+        "tags": [
+          "Issuers"
+        ],
+        "summary": "List the configured issuers",
+        "parameters": [
+          {
+            "name": "wallet",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of issuer objects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "uiEndpoint": {
+                        "type": "string"
+                      },
+                      "configurationEndpoint": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/issuers/add": {
+      "post": {
+        "tags": [
+          "Issuers"
+        ],
+        "summary": "Add issuer to wallet",
+        "parameters": [
+          {
+            "name": "wallet",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Issuer data",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "uiEndpoint": {
+                    "type": "string"
+                  },
+                  "configurationEndpoint": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issuer added successfully"
+          },
+          "400": {
+            "description": "Failed to add issuer to wallet"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/issuers/{issuer}": {
+      "get": {
+        "tags": [
+          "Issuers"
+        ],
+        "summary": "Fetch issuer data",
+        "parameters": [
+          {
+            "name": "wallet",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issuer",
+            "in": "path",
+            "description": "The issuer name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Issuer data object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "uiEndpoint": {
+                      "type": "string"
+                    },
+                    "configurationEndpoint": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          },
+          "404": {
+            "description": "Error message"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/issuers/{issuer}/authorize": {
+      "put": {
+        "tags": [
+          "Issuers"
+        ],
+        "summary": "Authorize issuer to automatically add credentials to the wallet in future",
+        "parameters": [
+          {
+            "name": "wallet",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issuer",
+            "in": "path",
+            "description": "The issuer name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Authorization succeed"
+          },
+          "400": {
+            "description": "Authorization failed"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/issuers/{issuer}/credentials": {
+      "get": {
+        "tags": [
+          "Issuers"
+        ],
+        "summary": "Show supported credentials for the given issuer",
+        "parameters": [
+          {
+            "name": "wallet",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issuer",
+            "in": "path",
+            "description": "The issuer name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of issuer credential objects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "format": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "types": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          },
+          "500": {
+            "description": "Error message"
+          }
+        }
+      }
+    },
+    "/api/files/download/{key}": {
+      "get": {
+        "summary": "Download a document using a signed URL",
+        "description": "Generates a pre-signed URL for downloading a specific document",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The document key/filename to download"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document download URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "Pre-signed download URL"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      }
+    },
+    "/api/files/user-documents": {
+      "get": {
+        "summary": "Get all documents for a user",
+        "description": "Retrieves all documents associated with the authenticated user",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User signed documents retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number"
+                      },
+                      "fileName": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "s3Url": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "sealed": {
+                        "type": "boolean"
+                      },
+                      "signed": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "No documents found"
+          }
+        }
+      }
+    },
+    "/api/files/get-signed-url/{key}": {
+      "get": {
+        "summary": "Get a signed URL for file upload",
+        "description": "Generates a pre-signed URL for uploading a document to S3",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The filename/key for the document"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "Pre-signed upload URL"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/files/add-record": {
+      "post": {
+        "summary": "Add a new document record",
+        "description": "Creates a new document record in the database",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fileName",
+                  "name",
+                  "key",
+                  "type"
+                ],
+                "properties": {
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sealed": {
+                    "type": "boolean"
+                  },
+                  "signed": {
+                    "type": "boolean"
+                  },
+                  "sealedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "signedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Record created successfully"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/files/update-record": {
+      "put": {
+        "summary": "Update an existing document record",
+        "description": "Updates an existing document record in the database",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "s3Url": {
+                    "type": "string"
+                  },
+                  "sealed": {
+                    "type": "boolean"
+                  },
+                  "signed": {
+                    "type": "boolean"
+                  },
+                  "sealedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "signedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Record updated successfully"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Record not found"
+          }
+        }
+      }
+    },
+    "/api/verifier/openid4vc/verify": {
+      "post": {
+        "summary": "Verify credentials",
+        "tags": [
+          "Verifier"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "request_credentials": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "List of credential types to request"
+                  },
+                  "vp_policies": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "policy": {
+                          "type": "string"
+                        },
+                        "args": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "description": "List of verifiable presentation policies to apply"
+                  },
+                  "vc_policies": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "List of verifiable credential policies to apply"
+                  }
+                }
+              },
+              "example": {
+                "request_credentials": [
+                  "OpenBadgeCredential",
+                  "VerifiableId"
+                ],
+                "vp_policies": [
+                  {
+                    "policy": "minimum-credentials",
+                    "args": 2
+                  }
+                ],
+                "vc_policies": [
+                  "signature",
+                  "expired"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credentials verified successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/openid4vc/session/{id}": {
+      "get": {
+        "summary": "Get session information",
+        "tags": [
+          "Verifier"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session information retrieved successfully"
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/openid4vc/policy-list": {
+      "get": {
+        "summary": "Get policy list",
+        "tags": [
+          "Verifier"
+        ],
+        "responses": {
+          "200": {
+            "description": "Policy list retrieved successfully"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/openid4vc/verify/{state}": {
+      "post": {
+        "summary": "Verify state",
+        "tags": [
+          "Verifier"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "State verified successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/openid4vc/pd/{id}": {
+      "get": {
+        "summary": "Get PD information",
+        "tags": [
+          "Verifier"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PD information retrieved successfully"
+          },
+          "404": {
+            "description": "PD not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/openid4vc/request/{id}": {
+      "get": {
+        "summary": "Get request information",
+        "tags": [
+          "Verifier"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request information retrieved successfully"
+          },
+          "404": {
+            "description": "Request not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/.well-known/openid-configuration": {
+      "get": {
+        "summary": "Get OpenID configuration",
+        "tags": [
+          "Verifier"
+        ],
+        "responses": {
+          "200": {
+            "description": "OpenID configuration retrieved successfully"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/jwks": {
+      "get": {
+        "summary": "Get JSON Web Key Set",
+        "tags": [
+          "Verifier"
+        ],
+        "responses": {
+          "200": {
+            "description": "JWKS retrieved successfully"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/verifier/authorize": {
+      "get": {
+        "summary": "Authorize request",
+        "tags": [
+          "Verifier"
+        ],
+        "responses": {
+          "200": {
+            "description": "Authorization successful"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/categories": {
+      "get": {
+        "summary": "List categories for a wallet",
+        "tags": [
+          "Categories"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wallet",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Categories retrieved successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/categories/{name}/add": {
+      "post": {
+        "summary": "Add a new category",
+        "tags": [
+          "Categories"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wallet",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the new category"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category added successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/categories/{name}": {
+      "delete": {
+        "summary": "Delete a category",
+        "tags": [
+          "Categories"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wallet",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the category to delete"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{wallet}/categories/{name}/rename/{newName}": {
+      "put": {
+        "summary": "Rename a category",
+        "tags": [
+          "Categories"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "wallet",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The current name of the category"
+          },
+          {
+            "in": "path",
+            "name": "newName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The new name for the category"
+          }
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category renamed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Category renamed successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/credentials": {
+      "get": {
+        "summary": "List credentials",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "showDeleted",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "showPending",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "descending",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of credentials"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update credential",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credential updated successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/credentials/{credentialId}": {
+      "get": {
+        "summary": "Get a specific credential",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a credential",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "permanent",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Credential deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/credentials/{credentialId}/restore": {
+      "post": {
+        "summary": "Restore a deleted credential",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential restored successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/credentials/{credentialId}/accept": {
+      "post": {
+        "summary": "Accept a credential",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Credential accepted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/credentials/{credentialId}/reject": {
+      "post": {
+        "summary": "Reject a credential",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Credential rejected successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/credentials/{credentialId}/status": {
+      "get": {
+        "summary": "Get credential status",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential status"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/credentials/{credentialId}/category": {
+      "put": {
+        "summary": "Update credential category",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Credential category updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete credential category",
+        "tags": [
+          "Credentials"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Credential category deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Credential not found"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/dids": {
+      "get": {
+        "summary": "List all DIDs for a wallet",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved DIDs"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/dids/{did}": {
+      "get": {
+        "summary": "Get a specific DID",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "did",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved DID"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "DID not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a specific DID",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "did",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "DID deleted successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "DID not found"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/dids/default": {
+      "post": {
+        "summary": "Set default DID for a wallet",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "did"
+                ],
+                "properties": {
+                  "did": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Default DID set successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/wallet/{walletId}/dids/create/key": {
+      "post": {
+        "summary": "Create a new did:key",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "useJwkJcsPub": {
+                    "type": "boolean",
+                    "description": "Optionally set JWK JCS Pub format (for e.g. EBSI)"
+                  },
+                  "keyId": {
+                    "type": "string",
+                    "description": "Optionally override a key ID to use"
+                  },
+                  "alias": {
+                    "type": "string",
+                    "description": "Optionally set key alias"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DID created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "DID already exists"
+          }
+        }
+      }
+    },
+    "/wallet/{walletId}/dids/create/jwk": {
+      "post": {
+        "summary": "Create a new did:jwk",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "keyId": {
+                    "type": "string",
+                    "description": "Optionally override a key ID to use"
+                  },
+                  "alias": {
+                    "type": "string",
+                    "description": "Optionally set key alias"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DID created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "DID already exists"
+          }
+        }
+      }
+    },
+    "/wallet/{walletId}/dids/create/web": {
+      "post": {
+        "summary": "Create a new did:web",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Domain to use to host did:web document at"
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "Path to host the did:web document at (starting with a \"/\")"
+                  },
+                  "keyId": {
+                    "type": "string",
+                    "description": "Optionally override a key ID to use"
+                  },
+                  "alias": {
+                    "type": "string",
+                    "description": "Optionally set key alias"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DID created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "DID already exists"
+          }
+        }
+      }
+    },
+    "/wallet/{walletId}/dids/create/ebsi": {
+      "post": {
+        "summary": "Create a new did:ebsi",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "enum": [
+                      1,
+                      2
+                    ],
+                    "description": "Version 2 (NaturalPerson) or 1 (LegalEntity)"
+                  },
+                  "bearerToken": {
+                    "type": "string",
+                    "description": "Required for v1 (LegalEntity)"
+                  },
+                  "keyId": {
+                    "type": "string",
+                    "description": "Optionally override a key ID to use"
+                  },
+                  "alias": {
+                    "type": "string",
+                    "description": "Optionally set key alias"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DID created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "DID already exists"
+          }
+        }
+      }
+    },
+    "/wallet/{walletId}/dids/create/cheqd": {
+      "post": {
+        "summary": "Create a new did:cheqd",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "network": {
+                    "type": "string",
+                    "enum": [
+                      "testnet",
+                      "mainnet"
+                    ],
+                    "description": "Network to create the DID on"
+                  },
+                  "keyId": {
+                    "type": "string",
+                    "description": "Optionally override a key ID to use"
+                  },
+                  "alias": {
+                    "type": "string",
+                    "description": "Optionally set key alias"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DID created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "DID already exists"
+          }
+        }
+      }
+    },
+    "/wallet/{walletId}/dids/create/iota": {
+      "post": {
+        "summary": "Create a new did:iota",
+        "tags": [
+          "DIDs"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "keyId": {
+                    "type": "string",
+                    "description": "Optionally override a key ID to use"
+                  },
+                  "alias": {
+                    "type": "string",
+                    "description": "Optionally set key alias"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DID created successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "409": {
+            "description": "DID already exists"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/eventlog": {
+      "get": {
+        "summary": "Retrieve event logs for a wallet",
+        "tags": [
+          "Event Logs"
+        ],
+        "security": [
+          {
+            "holderAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved event logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "event": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Wallet not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/eventlog/{id}": {
+      "delete": {
+        "summary": "Delete a specific event log",
+        "tags": [
+          "Event Logs"
+        ],
+        "security": [
+          {
+            "holderAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the event log to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event log successfully deleted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Event log or wallet not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/exchange/useOfferRequest": {
+      "post": {
+        "summary": "Use an offer request",
+        "tags": [
+          "Exchange"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "did",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "requireUserInput",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "offer"
+                ],
+                "properties": {
+                  "offer": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credential(s) claimed successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/exchange/matchCredentialsForPresentationDefinition": {
+      "post": {
+        "summary": "Match credentials for presentation definition",
+        "tags": [
+          "Exchange"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Matching credentials retrieved successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/exchange/unmatchedCredentialsForPresentationDefinition": {
+      "post": {
+        "summary": "Get unmatched credentials for presentation definition",
+        "tags": [
+          "Exchange"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Unmatched credentials retrieved successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/exchange/usePresentationRequest": {
+      "post": {
+        "summary": "Use a presentation request",
+        "tags": [
+          "Exchange"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credential(s) presented successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/exchange/resolvePresentationRequest": {
+      "post": {
+        "summary": "Resolve a presentation request",
+        "tags": [
+          "Exchange"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "offer"
+                ],
+                "properties": {
+                  "offer": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Presentation request resolved successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/exchange/resolveCredentialOffer": {
+      "post": {
+        "summary": "Resolve a credential offer",
+        "tags": [
+          "Exchange"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "offer"
+                ],
+                "properties": {
+                  "offer": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credential offer resolved successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/history": {
+      "get": {
+        "tags": [
+          "History"
+        ],
+        "summary": "Show operation history",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        },
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ]
+      }
+    },
+    "/api/wallet/{walletId}/keys": {
+      "get": {
+        "tags": [
+          "Keys"
+        ],
+        "summary": "List Keys",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of (key) strings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/keys/generate": {
+      "post": {
+        "tags": [
+          "Keys"
+        ],
+        "summary": "Generate new key",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Key configuration (JSON)",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "backend",
+                  "keyType"
+                ],
+                "properties": {
+                  "backend": {
+                    "type": "string",
+                    "example": "jwk"
+                  },
+                  "keyType": {
+                    "type": "string",
+                    "example": "Ed25519"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Key generated successfully"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/keys/import": {
+      "post": {
+        "tags": [
+          "Keys"
+        ],
+        "summary": "Import an existing key",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Key in JWK or PEM format",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Key imported successfully"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/keys/{keyId}/load": {
+      "get": {
+        "tags": [
+          "Keys"
+        ],
+        "summary": "Show a specific key",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyId",
+            "in": "path",
+            "description": "The key id (or alias)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The key document (JSON)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "additionalProp1": {},
+                  "additionalProp2": {},
+                  "additionalProp3": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/keys/{keyId}/meta": {
+      "get": {
+        "tags": [
+          "Keys"
+        ],
+        "summary": "Show a specific key meta info",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyId",
+            "in": "path",
+            "description": "The key id (or alias)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The key metadata (JSON)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "example": {
+                  "additionalProp1": {},
+                  "additionalProp2": {},
+                  "additionalProp3": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/keys/{keyId}/export": {
+      "get": {
+        "tags": [
+          "Keys"
+        ],
+        "summary": "Export a specific key",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyId",
+            "in": "path",
+            "description": "The key id (or alias)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "Select format to export the key, e.g. 'JWK' / 'PEM'. JWK by default.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "JWK",
+                "PEM"
+              ]
+            }
+          },
+          {
+            "name": "loadPrivateKey",
+            "in": "query",
+            "description": "Select if the secret private key should be loaded - take special care in this case! False by default.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The exported key"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/keys/{keyId}": {
+      "delete": {
+        "tags": [
+          "Keys"
+        ],
+        "summary": "Delete a specific key",
+        "parameters": [
+          {
+            "name": "walletId",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyId",
+            "in": "path",
+            "description": "The key id (or alias)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Key deleted"
+          },
+          "400": {
+            "description": "Key could not be deleted"
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    },
+    "/api/holder/{walletId}/manifest/{credentialId}": {
+      "get": {
+        "summary": "Get credential manifest",
+        "tags": [
+          "Manifest"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the credential"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential manifest retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/holder/{walletId}/manifest/{credentialId}/display": {
+      "get": {
+        "summary": "Get offer display info",
+        "tags": [
+          "Manifest"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the credential"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Offer display info retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/holder/{walletId}/manifest/{credentialId}/issuer": {
+      "get": {
+        "summary": "Get offer issuer info",
+        "tags": [
+          "Manifest"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "path",
+            "name": "credentialId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the credential"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Offer issuer info retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/holder/{walletId}/manifest/extract": {
+      "get": {
+        "summary": "Extract manifest info from issuance request offer",
+        "tags": [
+          "Manifest"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "query",
+            "name": "offer",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The offer request URI"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Manifest info extracted successfully"
+          },
+          "400": {
+            "description": "Bad request - Offer request URI is required"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/{walletId}/reports/frequent/credentials": {
+      "get": {
+        "summary": "Get frequent credentials report",
+        "tags": [
+          "WalletReports"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "walletId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the wallet"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The max number of items to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of frequent credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "addedOn": {
+                        "type": "object",
+                        "properties": {
+                          "epochSeconds": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "nanosecondsOfSecond": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "deletedOn": {
+                        "type": "object",
+                        "properties": {
+                          "epochSeconds": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "nanosecondsOfSecond": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "disclosures": {
+                        "type": "string"
+                      },
+                      "document": {
+                        "type": "string"
+                      },
+                      "format": {
+                        "type": "string",
+                        "example": "jwt_vc_json"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "manifest": {
+                        "type": "string"
+                      },
+                      "parsedDocument": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "parsedManifest": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "pending": {
+                        "type": "boolean"
+                      },
+                      "wallet": {
+                        "type": "object",
+                        "properties": {
+                          "clockSequence": {
+                            "type": "integer"
+                          },
+                          "isRfcVariant": {
+                            "type": "boolean"
+                          },
+                          "node": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "timeStamp": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "variant": {
+                            "type": "integer"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "versionNumber": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/wallet/accounts/wallets": {
+      "get": {
+        "summary": "Get wallets associated with account",
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "authMiddleware": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of wallets associated with the account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Account information (null in the example)"
+                    },
+                    "wallets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Unique identifier of the wallet"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Name of the wallet"
+                          },
+                          "createdOn": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true,
+                            "description": "Date and time when the wallet was created"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true,
+                            "description": "Date and time when the wallet was added to the account"
+                          },
+                          "permission": {
+                            "type": "string",
+                            "enum": [
+                              "ADMINISTRATE"
+                            ],
+                            "description": "Permission level for the wallet"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "account": null,
+                  "wallets": [
+                    {
+                      "id": null,
+                      "name": "My Wallet",
+                      "createdOn": null,
+                      "addedOn": null,
+                      "permission": "ADMINISTRATE"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid authentication"
+          }
+        }
+      }
+    }
+  },
+  "tags": [],
+  "_source": {
+    "repository": "platform-api",
+    "branch": "main",
+    "path": "docs/openapi.yaml",
+    "local": true
+  },
+  "_lastUpdated": "2025-02-28T21:13:34.388Z"
+}

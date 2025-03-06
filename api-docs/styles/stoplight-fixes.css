@@ -1,0 +1,25 @@
+/* Stoplight Elements style fixes */
+
+/* Light theme adjustments */
+:root {
+  --sl-color-primary: #0284c7 !important;
+  --sl-color-primary-dark: #0369a1 !important;
+}
+
+/* Dark theme adjustments */
+.dark {
+  --sl-color-primary: #38bdf8 !important;
+  --sl-color-primary-dark: #0ea5e9 !important;
+  --sl-color-text: rgba(255, 255, 255, 0.9) !important;
+  --sl-color-background: rgb(30, 30, 30) !important;
+}
+
+/* Fix layout conflicts between Tailwind and Stoplight */
+.elements-container {
+  font-family: inherit !important;
+}
+
+.elements-container .sl-elements {
+  height: 100% !important;
+  min-height: calc(100vh - 4rem) !important;
+}

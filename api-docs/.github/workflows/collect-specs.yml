@@ -1,0 +1,50 @@
+name: Collect API Specs
+
+on:
+  # Allow manual trigger
+  workflow_dispatch:
+  
+  # Run on schedule (commented out for now)
+  # schedule:
+  #   - cron: '0 0 * * *'  # Run daily at midnight UTC
+  
+  # Run when specific files change on main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'config/sources.json'
+      - '.github/workflows/collect-specs.yml'
+      - 'scripts/collect-specs.ts'
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      # To be implemented in Phase 3
+      - name: Collect API specifications
+        run: echo "API spec collection will be implemented in Phase 3"
+        # run: npm run collect-specs
+      
+      # To be implemented in Phase 3
+      - name: Commit changes if needed
+        run: |
+          echo "Committing changes will be implemented in Phase 3"
+          # git config user.name "GitHub Actions Bot"
+          # git config user.email "actions@github.com"
+          # git add public/api-specs/
+          # git diff --quiet && git diff --staged --quiet || git commit -m "Update API specifications"
+          # git push
