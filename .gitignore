@@ -43,6 +43,10 @@ next-env.d.ts
 logs
 *.log
 
+# API specs (will be generated)
+/api-docs/public/api-specs/*.json
+!/api-docs/public/api-specs/.gitkeep
+
 # terraform
 **/.terraform/*
 *.tfstate
