@@ -5,10 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>API Documentation - Sign In</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-  <script src="js/auth-basepath.js"></script>
   <script>
-    // Use the base path to correctly reference the auth.js file
-    document.write('<script src="' + (window.basePath || '') + '/js/auth.js" id="auth-script"><\/script>');
+    // Detect repository name from URL path for GitHub Pages
+    (function() {
+      window.basePath = '';
+      if (window.location.hostname.includes('github.io')) {
+        const pathParts = window.location.pathname.split('/');
+        if (pathParts.length > 1 && pathParts[1]) {
+          window.basePath = '/' + pathParts[1];
+        }
+      }
+      console.log('Detected base path:', window.basePath);
+    })();
+  </script>
+  <script>
+    // Use the full path (not relative) to correctly reference the auth.js file
+    const scriptSrc = window.location.origin + window.basePath + '/js/auth.js';
+    console.log('Loading auth script from:', scriptSrc);
+    document.write('<script src="' + scriptSrc + '" id="auth-script"><\/script>');
   </script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen flex items-center justify-center">

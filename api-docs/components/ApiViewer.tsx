@@ -20,8 +20,21 @@ export function ApiViewer({ specUrl }: ApiViewerProps) {
   // Handle client-side rendering and avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
+    
+    // Determine the base path
+    let basePath = '';
+    
+    // If deployed on GitHub Pages, extract repo name from URL
+    if (typeof window !== 'undefined') {
+      if (window.location.hostname.includes('github.io')) {
+        const pathParts = window.location.pathname.split('/');
+        if (pathParts.length > 1 && pathParts[1]) {
+          basePath = '/' + pathParts[1];
+        }
+      }
+    }
+    
     // Set the full URL to the API spec, accounting for basePath
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
     setApiUrl(`${window.location.origin}${basePath}${specUrl}`);
   }, [specUrl]);
 

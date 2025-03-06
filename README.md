@@ -78,7 +78,7 @@ This project follows a phased approach to implementation, with clear separation 
 - GitHub Actions workflow for automatic deployment
 - Static site generation compatible with GitHub Pages
 - Authentication support for protected documentation
-- Responsive design with light/dark mode
+- Base path handling for GitHub Pages subdirectory structure
 - Production-ready documentation portal
 
 ## Key Design Considerations
@@ -323,6 +323,22 @@ To create and manage API specifications:
 
 ## Troubleshooting & Common Issues
 
+### Deployment Path Resolution
+
+#### GitHub Pages Repository Path Issues
+When deploying to GitHub Pages, you may encounter path-related issues:
+1. Make sure the Next.js configuration correctly handles the repository name
+2. Check browser console for 404 errors on scripts and static assets
+3. If you deploy to a different repository, the base path detection should handle it automatically
+4. The login.html page uses special path detection code for GitHub Pages environments
+
+#### Authentication and Path Resolution
+Authentication on GitHub Pages requires careful path handling:
+1. The static config file must be available at `/api/config.json`
+2. All API requests must use absolute URLs with the correct base path
+3. Redirects must include the base path to avoid losing the repository context
+4. Browser console logs provide detailed information about path detection and API URL resolution
+
 ### Authentication Issues
 
 #### Enabling/Disabling Authentication
@@ -378,7 +394,7 @@ If you see hydration mismatch errors:
 
 ## Future Enhancements
 
-For Phase 3 and beyond, consider:
+For next phases, consider:
 
 1. **Multiple API Specs Management**:
    - Automated discovery of API specs in repositories
@@ -464,50 +480,115 @@ api-docs/
 
 ## Technical Solutions Implemented
 
-### Server-Side Rendering Issues
+### GitHub Pages Base Path Handling
+- Implemented dynamic repository name detection for GitHub Pages URLs
+- Created auto-discovery of base paths based on deployment location
+- Updated all asset references to include base path when deployed
+- Added automatic path correction for static HTML files and JavaScript
+- Developed a unified path resolution strategy that works across all environments
 
-Solved Mermaid SSR issues with:
-- Dynamic imports with Next.js `dynamic()` function
-- Client-side only rendering using `useEffect`
-- Component state to track client-side rendering
+### Server-Side Rendering Issues
+- Solved Stoplight Elements SSR issues with Next.js dynamic imports
+- Implemented client-side only rendering using `useEffect` hooks
+- Added component state to track client-side rendering and prevent hydration mismatches
+
+### Authentication for Static Sites
+- Created a JWT-based authentication system compatible with static hosting
+- Implemented client-side protection for routes without server requirements
+- Added detection for authentication status with secure token storage
+- Built support for toggling authentication on/off via configuration
 
 ### Style Conflict Resolution
+- Resolved dark mode inconsistencies in Stoplight Elements
+- Applied targeted CSS overrides for documentation components
+- Implemented custom theme classes for Stoplight compatibility
+- Created responsive layouts for both desktop and mobile viewing
 
-Fixed styling conflicts between components:
-- Isolated CSS rules with specific selectors
-- Applied `!important` flags to critical styles
-- Used inline styles for component-specific styling
-- Implemented style reset for Stoplight Elements
+### API Specification Management
+- Added support for multiple API specifications in a single interface
+- Created sample specification generator for development
+- Implemented configuration-based API source definition
+- Built flexible path handling for API specification loading
+- Added graceful error handling with fallback sample specs
 
-### API Specification Processing
+### Static Site Optimization
+- Configured Next.js for optimal static site generation
+- Implemented asset optimization for production builds
+- Created development utilities that work in both local and production environments
+- Ensured compatibility with GitHub Pages hosting requirements
 
-Enhanced API spec collection with:
-- Local file support with path resolution
-- Validation of OpenAPI specifications
-- Caching based on file hash
-- Graceful error handling for missing files
+## Planned Improvements for Phase 5
 
-### Integration with External Services
+1. **Configuration and Deployment**
+   - Add deployment configuration system to store GitHub Pages URL in config
+   - Implement centralized environment detection (dev/staging/production)
+   - Create automatic GitHub repository metadata collection
+   - Make base path and asset loading fully dynamic across environments
+   - Implement versioning for API specifications
 
-Implemented flexible integration with:
-- Support for local and remote OpenAPI specs
-- Release tag detection and synchronization
-- Automated specification collection from repositories
-
-### UI/UX ###
-- light/dark mode switch
-- natively supported mobile navigation
-
-## Improvements
-
-1. **Feature Enhancements**
+2. **Navigation and User Experience**
+   - Make header navigation dynamic based on available APIs
    - Add search functionality across all documentation
-   - Implement versioned documentation
-   - Add language-specific code samples
-   - Include testing tools for API endpoints
+   - Implement breadcrumbs for better navigation
+   - Add mobile optimizations for API documentation
 
-2. **Documentation Expansion**
-   - Add more API flow examples
+3. **Custom Domain Support**
+   - Move from GitHub Pages subdirectory to custom domain
+   - Update base path configuration for root path serving
+   - Configure SSL certificates for secure connections
+   - Update CORS settings in API Gateway
+
+4. **Enhance Authentication**
+   - Add support for GitHub OAuth authentication
+   - Create role-based access for different API specs
+   - Add whitelisting for organization members
+   - Improve token refresh mechanism and security
+
+5. **Documentation Expansion**
+   - Add more API flow examples with Mermaid diagrams
    - Include end-to-end workflow documentation
    - Create developer guides for common scenarios
-   - Add troubleshooting sections
+   - Add comprehensive troubleshooting sections
+
+## Project Status and Next Steps
+
+The API Documentation Platform has now reached a stable state with all major features implemented:
+
+1. **✅ Core Functionality Complete**:
+   - Interactive API reference viewing
+   - Multiple API specification support
+   - Responsive, mobile-friendly UI
+   - Dark/light mode theming
+
+2. **✅ Authentication System Working**:
+   - Secure JWT-based authentication
+   - AWS Lambda for password verification
+   - Configurable on/off toggle
+   - Browser storage with proper expiration
+
+3. **✅ GitHub Pages Deployment**:
+   - Automatic deployment via GitHub Actions
+   - Dynamic path handling for any repository name
+   - Static site generation with proper asset references
+   - Configuration correctly loaded in all environments
+
+4. **⏩ Ready for Real API Specifications**:
+   - Sample API specification generator ready for testing
+   - Configuration structure prepared for multiple APIs
+   - Path resolution works for any specification path
+   - Test deployment confirmed working
+
+### Immediate Action Items
+
+1. Create and add real API specifications to the `/api-specs/` directory
+2. Test with multiple specifications to verify navigation
+3. Update header to support dynamic navigation based on available APIs
+4. When ready, consider moving to a custom domain
+
+### Suggested Testing Workflow
+
+1. Make changes locally and test with `npm run dev`
+2. Generate sample specs with `npm run create-sample-specs`
+3. Push changes to GitHub for automatic deployment
+4. Verify functionality on GitHub Pages deployment
+5. Check browser console for any path-related errors

@@ -47,7 +47,11 @@ jobs:
       - name: Build
         run: |
           cd api-docs
-          npm run build
+          # Extract repository name from GITHUB_REPOSITORY (owner/repo)
+          REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          echo "Building for repository: $REPO_NAME"
+          # Set the repository name as an environment variable
+          REPOSITORY_NAME=$REPO_NAME npm run build
           # export is now done automatically with output: 'export' in next.config.js
       
       - name: Setup Pages

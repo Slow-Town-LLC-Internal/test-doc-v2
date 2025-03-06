@@ -1,9 +1,20 @@
 // This script adds the necessary base path handling for GitHub Pages
 (function() {
   // Detect if we're running on GitHub Pages
-  // If URL includes the repository name, we're on GitHub Pages
   const isGitHubPages = window.location.hostname.includes('github.io');
   
-  // Set the base path if we're on GitHub Pages
-  window.basePath = isGitHubPages ? '/test-doc-v2' : '';
+  if (isGitHubPages) {
+    // Extract repository name from path
+    const pathParts = window.location.pathname.split('/');
+    // The first part after the hostname should be the repo name
+    if (pathParts.length > 1 && pathParts[1]) {
+      window.basePath = '/' + pathParts[1];
+    } else {
+      window.basePath = '';
+    }
+  } else {
+    window.basePath = '';
+  }
+  
+  console.log('Detected base path:', window.basePath);
 })();
