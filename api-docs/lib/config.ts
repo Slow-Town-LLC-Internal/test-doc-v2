@@ -5,8 +5,8 @@ const defaultConfig: AppConfig = {
   features: {
     auth: {
       enabled: false,
-      provider: 'github',
-      whitelist: 'whitelist.txt'
+      provider: 'password',
+      passwordProtected: false
     },
     theme: {
       darkMode: true,
@@ -95,4 +95,12 @@ export function getAppConfig(): AppConfig {
 export function isAuthEnabled(): boolean {
   const config = getAppConfig();
   return config.features.auth.enabled;
+}
+
+// Utility function to check if password auth is enabled
+export function isPasswordAuthEnabled(): boolean {
+  const config = getAppConfig();
+  return config.features.auth.enabled && 
+         config.features.auth.provider === 'password' &&
+         config.features.auth.passwordProtected === true;
 }

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import Head from 'next/head';
 import { Header } from './Header';
-import { Protected } from './Protected';
+import { PasswordProtected } from './PasswordProtected';
 import { getAppConfig } from '@/lib/config';
 
 interface LayoutProps {
@@ -23,6 +23,7 @@ export function Layout({ children, title = 'API Documentation', requireAuth = tr
         <meta name="description" content={config.meta.description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        <script src="/js/auth.js" defer></script>
       </Head>
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -38,9 +39,9 @@ export function Layout({ children, title = 'API Documentation', requireAuth = tr
     </>
   );
   
-  // If auth is required and enabled, wrap content in Protected component
-  if (requireAuth && config.features.auth.enabled) {
-    return <Protected>{layoutContent}</Protected>;
+  // If auth is required, wrap content in PasswordProtected component
+  if (requireAuth) {
+    return <PasswordProtected>{layoutContent}</PasswordProtected>;
   }
   
   // Otherwise, return the content without protection
