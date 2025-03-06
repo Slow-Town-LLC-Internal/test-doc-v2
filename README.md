@@ -323,6 +323,22 @@ To create and manage API specifications:
 
 ## Troubleshooting & Common Issues
 
+### Deployment Path Resolution
+
+#### GitHub Pages Repository Path Issues
+When deploying to GitHub Pages, you may encounter path-related issues:
+1. Make sure the Next.js configuration correctly handles the repository name
+2. Check browser console for 404 errors on scripts and static assets
+3. If you deploy to a different repository, the base path detection should handle it automatically
+4. The login.html page uses special path detection code for GitHub Pages environments
+
+#### Authentication and Path Resolution
+Authentication on GitHub Pages requires careful path handling:
+1. The static config file must be available at `/api/config.json`
+2. All API requests must use absolute URLs with the correct base path
+3. Redirects must include the base path to avoid losing the repository context
+4. Browser console logs provide detailed information about path detection and API URL resolution
+
 ### Authentication Issues
 
 #### Enabling/Disabling Authentication
@@ -465,10 +481,11 @@ api-docs/
 ## Technical Solutions Implemented
 
 ### GitHub Pages Base Path Handling
-- Added environment variables for production base path configuration
-- Implemented dynamic base path detection in client-side code
+- Implemented dynamic repository name detection for GitHub Pages URLs
+- Created auto-discovery of base paths based on deployment location
 - Updated all asset references to include base path when deployed
-- Created fallback mechanisms for static HTML files
+- Added automatic path correction for static HTML files and JavaScript
+- Developed a unified path resolution strategy that works across all environments
 
 ### Server-Side Rendering Issues
 - Solved Stoplight Elements SSR issues with Next.js dynamic imports
@@ -502,25 +519,76 @@ api-docs/
 
 ## Planned Improvements for Phase 5
 
-1. **Navigation and User Experience**
+1. **Configuration and Deployment**
+   - Add deployment configuration system to store GitHub Pages URL in config
+   - Implement centralized environment detection (dev/staging/production)
+   - Create automatic GitHub repository metadata collection
+   - Make base path and asset loading fully dynamic across environments
+   - Implement versioning for API specifications
+
+2. **Navigation and User Experience**
    - Make header navigation dynamic based on available APIs
    - Add search functionality across all documentation
    - Implement breadcrumbs for better navigation
    - Add mobile optimizations for API documentation
 
-2. **Custom Domain Support**
+3. **Custom Domain Support**
    - Move from GitHub Pages subdirectory to custom domain
    - Update base path configuration for root path serving
    - Configure SSL certificates for secure connections
    - Update CORS settings in API Gateway
 
-3. **Enhance Authentication**
+4. **Enhance Authentication**
    - Add support for GitHub OAuth authentication
    - Create role-based access for different API specs
    - Add whitelisting for organization members
+   - Improve token refresh mechanism and security
 
-4. **Documentation Expansion**
+5. **Documentation Expansion**
    - Add more API flow examples with Mermaid diagrams
    - Include end-to-end workflow documentation
    - Create developer guides for common scenarios
    - Add comprehensive troubleshooting sections
+
+## Project Status and Next Steps
+
+The API Documentation Platform has now reached a stable state with all major features implemented:
+
+1. **✅ Core Functionality Complete**:
+   - Interactive API reference viewing
+   - Multiple API specification support
+   - Responsive, mobile-friendly UI
+   - Dark/light mode theming
+
+2. **✅ Authentication System Working**:
+   - Secure JWT-based authentication
+   - AWS Lambda for password verification
+   - Configurable on/off toggle
+   - Browser storage with proper expiration
+
+3. **✅ GitHub Pages Deployment**:
+   - Automatic deployment via GitHub Actions
+   - Dynamic path handling for any repository name
+   - Static site generation with proper asset references
+   - Configuration correctly loaded in all environments
+
+4. **⏩ Ready for Real API Specifications**:
+   - Sample API specification generator ready for testing
+   - Configuration structure prepared for multiple APIs
+   - Path resolution works for any specification path
+   - Test deployment confirmed working
+
+### Immediate Action Items
+
+1. Create and add real API specifications to the `/api-specs/` directory
+2. Test with multiple specifications to verify navigation
+3. Update header to support dynamic navigation based on available APIs
+4. When ready, consider moving to a custom domain
+
+### Suggested Testing Workflow
+
+1. Make changes locally and test with `npm run dev`
+2. Generate sample specs with `npm run create-sample-specs`
+3. Push changes to GitHub for automatic deployment
+4. Verify functionality on GitHub Pages deployment
+5. Check browser console for any path-related errors

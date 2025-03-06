@@ -40,13 +40,17 @@ function getBasePath() {
 async function loadConfig() {
   try {
     const basePath = getBasePath();
+    console.log('Using base path for config:', basePath);
     
     // First try the API endpoint (for development)
     try {
-      const response = await fetch(`${basePath}/api/config`);
+      const apiConfigUrl = `${window.location.origin}${basePath}/api/config`;
+      console.log('Trying to load config from API endpoint:', apiConfigUrl);
+      const response = await fetch(apiConfigUrl);
       if (response.ok) {
         const config = await response.json();
         if (config.features && config.features.auth) {
+          console.log('Loaded config from API endpoint');
           API_URL = config.features.auth.apiUrl || API_URL;
           TOKEN_KEY = config.features.auth.tokenKey || TOKEN_KEY;
           EXPIRY_KEY = config.features.auth.expiryKey || EXPIRY_KEY;
@@ -54,21 +58,25 @@ async function loadConfig() {
         }
       }
     } catch (e) {
-      console.log('API endpoint not available, trying static file');
+      console.log('API endpoint not available, trying static file:', e);
     }
     
     // Fallback to static JSON file (for production/GitHub Pages)
-    const staticResponse = await fetch(`${basePath}/api/config.json`);
+    const staticConfigUrl = `${window.location.origin}${basePath}/api/config.json`;
+    console.log('Trying to load config from static file:', staticConfigUrl);
+    const staticResponse = await fetch(staticConfigUrl);
     if (!staticResponse.ok) {
-      throw new Error('Failed to fetch config from static file');
+      throw new Error(`Failed to fetch config from static file: ${staticResponse.status} ${staticResponse.statusText}`);
     }
     const config = await staticResponse.json();
+    console.log('Loaded config from static file');
     
     // Set auth configuration from config file
     if (config.features && config.features.auth) {
       API_URL = config.features.auth.apiUrl || API_URL;
       TOKEN_KEY = config.features.auth.tokenKey || TOKEN_KEY;
       EXPIRY_KEY = config.features.auth.expiryKey || EXPIRY_KEY;
+      console.log('API URL set to:', API_URL);
     }
   } catch (error) {
     console.error('Error loading auth configuration:', error);
@@ -193,12 +201,16 @@ async function isAuthEnabled() {
     
     // First try the API endpoint (for development)
     try {
-      const response = await fetch(`${basePath}/api/config`);
+      const apiConfigUrl = `${window.location.origin}${basePath}/api/config`;
+      console.log('Checking auth enabled from API endpoint:', apiConfigUrl);
+      const response = await fetch(apiConfigUrl);
       if (response.ok) {
         const config = await response.json();
         if (config.features && config.features.auth) {
-          return config.features.auth.enabled && 
+          const authEnabled = config.features.auth.enabled && 
                  config.features.auth.provider === 'password';
+          console.log('Auth enabled from API endpoint:', authEnabled);
+          return authEnabled;
         }
       }
     } catch (e) {
@@ -206,15 +218,19 @@ async function isAuthEnabled() {
     }
     
     // Fallback to static JSON file (for production/GitHub Pages)
-    const staticResponse = await fetch(`${basePath}/api/config.json`);
+    const staticConfigUrl = `${window.location.origin}${basePath}/api/config.json`;
+    console.log('Checking auth enabled from static file:', staticConfigUrl);
+    const staticResponse = await fetch(staticConfigUrl);
     if (!staticResponse.ok) {
-      throw new Error('Failed to fetch config from static file');
+      throw new Error(`Failed to fetch config from static file: ${staticResponse.status} ${staticResponse.statusText}`);
     }
     const config = await staticResponse.json();
-    return config.features.auth.enabled && 
+    const authEnabled = config.features.auth.enabled && 
            config.features.auth.provider === 'password';
+    console.log('Auth enabled from static file:', authEnabled);
+    return authEnabled;
   } catch (error) {
-    console.error('Error fetching config:', error);
+    console.error('Error checking if auth is enabled:', error);
     return false; // Default to not requiring auth if config can't be loaded
   }
 }
