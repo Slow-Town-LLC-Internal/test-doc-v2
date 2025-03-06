@@ -41,12 +41,14 @@ export function ApiViewer({ specUrl }: ApiViewerProps) {
         href="https://unpkg.com/@stoplight/elements/styles.min.css" 
       />
       
-      <StoplightElements
-        apiDescriptionUrl={apiUrl}
-        router="hash"
-        layout="sidebar"
-        appearance={resolvedTheme as 'light' | 'dark'}
-      />
+      {/* Use theme class instead of appearance prop */}
+      <div className={`sl-elements ${resolvedTheme === 'dark' ? 'sl-elements-dark' : 'sl-elements-light'}`}>
+        <StoplightElements
+          apiDescriptionUrl={apiUrl}
+          router="hash"
+          layout="sidebar"
+        />
+      </div>
     </div>
   );
 }
