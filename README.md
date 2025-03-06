@@ -33,19 +33,19 @@ Our API documentation platform follows a phased implementation approach, with a 
 - Custom login page
 - On/off toggle for authentication
 
-### Phase 3: Automated Spec Collection ✅
-- Local spec collection tools implemented with Go
-- Automatic spec validation and processing
-- TypeScript wrapper for Go implementation
-- Configurable sources with repository paths and generator commands
-- Support for multiple API types (TypeScript, Kotlin)
+### Phase 3: Manual Spec Management ✅
+- Simple sources configuration in JSON format
+- Sample API specification generator for development
+- Easy addition of new API documentation
+- Support for multiple API specifications in the same interface
+- No external dependencies for spec generation
 
-### Phase 4: CI/CD Integration (Planned)
-- GitHub Actions workflow to run spec collection (currently disabled for testing)
-- Automated repository scanning and checkout
-- Support for both manual triggering and schedule-based execution
-- Rebuild and deployment pipeline
-- Access management for private repositories
+### Phase 4: GitHub Pages Deployment ✅
+- GitHub Actions workflow for automatic deployment
+- Static site generation compatible with GitHub Pages
+- Authentication support for protected documentation
+- Responsive design with light/dark mode
+- Production-ready documentation portal
 
 ## Project Roadmap & Implementation Status
 
@@ -67,19 +67,19 @@ This project follows a phased approach to implementation, with clear separation 
 - Custom login page with error handling
 - Logout functionality in header
 
-### Phase 3: Automated Spec Collection ✅
-- Local spec collection tools implemented with Go
-- Automatic API spec validation and processing
-- TypeScript wrapper for Go implementation
-- Configurable sources with repository paths and generator commands
-- Support for multiple API types (TypeScript, Kotlin)
+### Phase 3: Manual Spec Management ✅
+- Simple sources configuration in JSON format
+- Sample API specification generator for development
+- Easy addition of new API documentation
+- Support for multiple API specifications in the same interface
+- No external dependencies for spec generation
 
-### Phase 4: CI/CD Integration (Planned)
-- GitHub Actions workflow to run spec collection (currently disabled for testing)
-- Automated repository scanning and checkout
-- Support for both manual triggering and schedule-based execution
-- Rebuild and deployment pipeline
-- Access management for private repositories
+### Phase 4: GitHub Pages Deployment ✅
+- GitHub Actions workflow for automatic deployment
+- Static site generation compatible with GitHub Pages
+- Authentication support for protected documentation
+- Responsive design with light/dark mode
+- Production-ready documentation portal
 
 ## Key Design Considerations
 
@@ -134,11 +134,10 @@ This project follows a phased approach to implementation, with clear separation 
 5. Both components skip auth checks when `features.auth.enabled` is `false`
 6. When authentication is needed, auth.js uses the API URL from config to send requests
 
-### Automated Spec Collection (Phase 3 ✅)
-- **`api-docs/scripts/collect-specs.go`**: Go implementation for API spec collection
-- **`api-docs/scripts/collect-specs.ts`**: TypeScript wrapper for Go implementation
-- **`api-docs/config/sources.json`**: Configuration for API sources and generator commands
-- **`api-docs/.github/workflows/collect-specs.yml`**: GitHub Actions workflow (currently disabled for testing)
+### API Specification Management (Phase 3 ✅)
+- **`api-docs/config/sources.json`**: Configuration file defining available API specifications
+- **`api-docs/scripts/create-sample-specs.js`**: Script to generate sample API specs for development
+- **`api-docs/public/api-specs/`**: Directory containing OpenAPI specification files
 
 ## Development & Deployment Guide
 
@@ -243,8 +242,9 @@ This project follows a phased approach to implementation, with clear separation 
 ### Deployment to GitHub Pages
 
 1. **Automatic Deployment with GitHub Actions:**
-   - The project includes a GitHub Actions workflow file in `.github/workflows/deploy.yml`
+   - The project includes a GitHub Actions workflow file in the repository root at `.github/workflows/deploy.yml`
    - This workflow automatically builds and deploys the site to GitHub Pages on push to the main branch
+   - The workflow will create sample API specs if none exist in the repository
    - You can also trigger a deployment manually from the Actions tab in GitHub
 
 2. **Configure GitHub Pages in Repository Settings:**
@@ -286,12 +286,12 @@ To change the password:
    terraform apply
    ```
 
-### API Spec Collection
+### API Specifications
 
-To collect API specifications from source repositories:
+To create and manage API specifications:
 
-1. **Configure source repositories**:
-   Update `api-docs/config/sources.json` with the correct local paths to your repositories:
+1. **Configure API sources**:
+   Update `api-docs/config/sources.json` to define your API specifications:
    ```json
    {
      "apis": [
@@ -299,32 +299,28 @@ To collect API specifications from source repositories:
          "id": "example-api",
          "name": "Example API",
          "specPath": "/api-specs/example-api.json",
-         "sourceRepo": "https://github.com/org/repo",
-         "localPath": "/path/to/local/clone",
-         "generatorType": "typescript",
-         "generatorCommand": "npm run generate:spec"
+         "version": "1.0.0"
        }
      ]
    }
    ```
 
-2. **Install dependencies**:
+2. **Create sample specifications** (for development):
    ```bash
    cd api-docs
-   npm install
+   npm run create-sample-specs
    ```
 
-3. **Install Go**:
-   Make sure Go 1.19+ is installed on your system.
+3. **Add real specifications**:
+   Place your OpenAPI/Swagger JSON files in the `api-docs/public/api-specs/` directory
+   with filenames matching the `specPath` values in your sources.json file.
 
-4. **Run the collection script**:
+4. **Verify specifications**:
+   Start the development server and check that your API specifications are displayed correctly.
    ```bash
    cd api-docs
-   npm run collect-specs
+   npm run dev
    ```
-
-5. **Verify collected specs**:
-   Check the `api-docs/public/api-specs/` directory for the generated specification files.
 
 ## Troubleshooting & Common Issues
 

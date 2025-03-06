@@ -7,13 +7,10 @@
       "version": "1.0.0"
     },
     {
-      "id": "prisma",
-      "name": "Prisma API",
-      "specPath": "/api-specs/prisma-api.json",
-      "sourceRepo": "https://github.com/Slow-Town-LLC-Internal/prisma",
-      "localPath": "/Users/arbeitandy/src/tmprepos/prisma",
-      "generatorType": "typescript",
-      "generatorCommand": "npm run generate:spec"
+      "id": "github",
+      "name": "Github API",
+      "specPath": "/api-specs/github-api.json",
+      "version": "1.1.4"
     }
   ]
 }
