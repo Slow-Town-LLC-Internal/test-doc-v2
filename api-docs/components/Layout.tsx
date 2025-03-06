@@ -23,7 +23,15 @@ export function Layout({ children, title = 'API Documentation', requireAuth = tr
         <meta name="description" content={config.meta.description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
-        <script src="/js/auth.js" defer></script>
+        <script 
+          src="/js/auth.js" 
+          defer 
+          id="auth-script"
+          data-check-exists="true"
+          dangerouslySetInnerHTML={{
+            __html: 'if(document.getElementById("auth-script") && document.getElementById("auth-script") !== this) { this.parentNode.removeChild(this); }'
+          }}
+        ></script>
       </Head>
       <div className="min-h-screen flex flex-col">
         <Header />
