@@ -242,22 +242,28 @@ This project follows a phased approach to implementation, with clear separation 
 
 ### Deployment to GitHub Pages
 
-1. **Build the Next.js application:**
+1. **Automatic Deployment with GitHub Actions:**
+   - The project includes a GitHub Actions workflow file in `.github/workflows/deploy.yml`
+   - This workflow automatically builds and deploys the site to GitHub Pages on push to the main branch
+   - You can also trigger a deployment manually from the Actions tab in GitHub
+
+2. **Configure GitHub Pages in Repository Settings:**
+   - Go to your repository settings on GitHub
+   - Navigate to the Pages section
+   - Set the source to "GitHub Actions"
+   - If using a custom domain, enter it in the Custom domain field
+
+3. **Updating Configuration for Deployment:**
+   - Update your API Gateway URL in `api-docs/config/app-config.json` under `features.auth.apiUrl`
+   - If using a custom domain, set the appropriate CORS headers in your API Gateway configuration
+   - Test authentication flow to ensure correct configuration after deployment
+
+4. **Manual Build (if needed):**
    ```bash
    cd api-docs
    npm run build
-   npm run export  # Creates out directory with static files
+   # The static output will be in the 'out' directory
    ```
-
-2. **Configure GitHub Pages:**
-   - Set up a GitHub repository for the project
-   - Configure GitHub Pages to use the `main` branch `/docs` folder
-   - Copy the contents of the `out` directory to the `docs` directory
-   - Push changes to GitHub
-
-3. **Updating Authentication Configuration:**
-   - If using a CNAME, update the API URL in `auth.js` to point to your API Gateway endpoint
-   - Test authentication flow to ensure correct configuration
 
 ### Password Rotation
 
