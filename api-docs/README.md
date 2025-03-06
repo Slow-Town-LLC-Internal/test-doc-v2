@@ -8,13 +8,30 @@ This project provides a platform for API documentation with interactive API refe
 
 - Node.js 18+
 - npm or yarn
+- GitHub account (for authentication)
 
 ### Installation
 
 ```bash
 # Install dependencies
 npm install
+
+# Create environment file
+cp .env.local.example .env.local
 ```
+
+Edit `.env.local` to add your GitHub OAuth credentials.
+
+### Setting up GitHub Authentication
+
+1. Create a GitHub OAuth app at https://github.com/settings/developers
+   - Set Homepage URL to your site URL (e.g., http://localhost:3000)
+   - Set Authorization callback URL to your site URL + /api/auth/callback/github
+
+2. Copy the Client ID and Client Secret to your `.env.local` file
+3. Generate a random secret for NEXTAUTH_SECRET (e.g., `openssl rand -base64 32`)
+4. Add GitHub handles to `config/whitelist.txt`
+5. Enable authentication in `config/app-config.json` by setting `features.auth.enabled` to `true`
 
 ### Development
 

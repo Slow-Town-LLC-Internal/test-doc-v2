@@ -26,11 +26,12 @@ Our API documentation platform follows a phased implementation approach, with a 
 - Add light/dark mode support via next-themes
 - Configure sample API specs for initial testing
 
-### Phase 2: Authentication Layer (Next)
-- GitHub OAuth authentication
+### Phase 2: Authentication Layer ✅
+- GitHub OAuth authentication with NextAuth.js
 - Whitelist-based access control using a simple text file
 - Protected routes with session validation
 - Custom sign-in and unauthorized access pages
+- On/off toggle for authentication
 
 ### Phase 3: Automated Spec Collection (Future)
 - GitHub Actions workflow to scan organization repositories
@@ -41,13 +42,59 @@ Our API documentation platform follows a phased implementation approach, with a 
 
 ## Current Progress
 
-The Phase 1 implementation includes:
+The implementation includes:
+
+### Phase 1: Core Platform
 - Next.js project with TypeScript and Tailwind CSS
 - Stoplight Elements integration for API documentation
 - Light/dark mode toggle with theme persistence
 - Responsive design for mobile and desktop
 - Sample API specification (Platform API)
 - Configuration system for managing API sources
+
+### Phase 2: Authentication
+- GitHub OAuth integration using NextAuth.js
+- Whitelist-based access control for GitHub handles
+- On/off toggle in configuration file
+- Protected routes with automatic redirection
+- Custom sign-in and error pages
+- User session display in header
+
+## Setting up GitHub Authentication
+
+1. Create a GitHub OAuth app:
+   - Go to GitHub Developer Settings > OAuth Apps > New OAuth App
+   - Set Homepage URL to your site URL (e.g., http://localhost:3000)
+   - Set Authorization callback URL to your site URL + /api/auth/callback/github (e.g., http://localhost:3000/api/auth/callback/github)
+
+2. Copy the Client ID and generate a Client Secret
+
+3. Create a `.env.local` file based on the example:
+   ```
+   cp api-docs/.env.local.example api-docs/.env.local
+   ```
+
+4. Add your GitHub credentials to `.env.local`:
+   ```
+   GITHUB_ID=your_client_id
+   GITHUB_SECRET=your_client_secret
+   NEXTAUTH_SECRET=your_random_secret
+   NEXTAUTH_URL=http://localhost:3000
+   ```
+
+5. Add GitHub handles to the whitelist in `api-docs/config/whitelist.txt`
+
+6. Enable authentication in `api-docs/config/app-config.json`:
+   ```json
+   {
+     "features": {
+       "auth": {
+         "enabled": true,
+         ...
+       }
+     }
+   }
+   ```
 
 ### Implementation Components
 

@@ -1,0 +1,17 @@
+{
+  "features": {
+    "auth": {
+      "enabled": false,
+      "provider": "github",
+      "whitelist": "whitelist.txt"
+    },
+    "theme": {
+      "darkMode": true,
+      "colorScheme": "blue"
+    }
+  },
+  "meta": {
+    "title": "API Documentation Platform",
+    "description": "Interactive API documentation for platform services"
+  }
+}
