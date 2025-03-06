@@ -1,7 +1,7 @@
 export interface AuthConfig {
   enabled: boolean;
   provider: string;
-  whitelist: string;
+  passwordProtected?: boolean;
 }
 
 export interface ThemeConfig {

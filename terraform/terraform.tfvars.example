@@ -1,0 +1,19 @@
+# Sample Terraform variables file
+# Rename to terraform.tfvars and update values
+
+# Project identification
+project_name = "slow-town"
+environment  = "dev"
+aws_region   = "us-west-2"
+
+# Authentication settings
+# Generate JWT secret with: openssl rand -base64 32
+docs_auth_jwt_secret = "your-secure-jwt-secret-here"
+
+# Generate password hash with:
+# node -e "const crypto = require('crypto'); const salt = crypto.randomBytes(16).toString('hex'); const hash = crypto.createHash('sha256').update(salt + 'your-password').digest('hex'); console.log('sha256:' + salt + ':' + hash);"
+docs_auth_password_hash = "sha256:salt-value-here:hash-value-here"
+
+# Custom domain settings (optional)
+use_custom_domain = false
+api_domain_name   = "api.example.com"

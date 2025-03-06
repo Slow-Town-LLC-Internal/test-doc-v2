@@ -2,8 +2,8 @@
   "features": {
     "auth": {
       "enabled": true,
-      "provider": "github",
-      "whitelist": "whitelist.txt"
+      "provider": "password",
+      "passwordProtected": true
     },
     "theme": {
       "darkMode": false,
