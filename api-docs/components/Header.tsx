@@ -2,12 +2,68 @@ import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { isAuthEnabled } from '@/lib/config';
-import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 export function Header() {
   const { data: session, status } = useSession();
-  const authEnabled = isAuthEnabled();
-  const loading = status === 'loading';
+  const [mounted, setMounted] = useState(false);
+  const [authState, setAuthState] = useState({
+    enabled: false,
+    loading: true
+  });
+  
+  // Handle client-side only rendering to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    const authEnabled = isAuthEnabled();
+    
+    setAuthState({
+      enabled: authEnabled,
+      loading: status === 'loading'
+    });
+  }, [status]);
+  
+  // Don't render auth components on server or before client hydration
+  if (!mounted) {
+    return (
+      <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-8">
+            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
+              API Documentation
+            </Link>
+            <nav className="hidden md:flex space-x-6">
+              <Link href="/" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                Home
+              </Link>
+              <Link href="/api-docs/platform" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                Platform API
+              </Link>
+            </nav>
+          </div>
+          <div className="flex items-center space-x-4">
+            {/* Placeholder for ThemeToggle with same dimensions */}
+            <div className="w-10 h-10"></div>
+            {/* Placeholder for auth button with same dimensions */}
+            <div className="w-20 h-8"></div>
+          </div>
+        </div>
+        {/* Mobile navigation */}
+        <div className="md:hidden border-t border-gray-200 dark:border-gray-700">
+          <div className="container mx-auto px-4 py-2">
+            <nav className="flex space-x-6">
+              <Link href="/" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                Home
+              </Link>
+              <Link href="/api-docs/platform" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                Platform API
+              </Link>
+            </nav>
+          </div>
+        </div>
+      </header>
+    );
+  }
   
   return (
     <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
@@ -28,10 +84,10 @@ export function Header() {
         <div className="flex items-center space-x-4">
           <ThemeToggle />
           
-          {/* Authentication Button */}
-          {authEnabled && (
+          {/* Authentication Button - Only rendered client-side */}
+          {authState.enabled && (
             <>
-              {loading ? (
+              {authState.loading ? (
                 <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
               ) : session ? (
                 <div className="flex items-center">
@@ -43,7 +99,7 @@ export function Header() {
                       <div className="h-8 w-8 rounded-full overflow-hidden">
                         <img 
                           src={session.user.image}
-                          alt={session.user.name || 'User'} 
+                          alt={session.user?.name || 'User'} 
                           className="h-full w-full object-cover"
                         />
                       </div>

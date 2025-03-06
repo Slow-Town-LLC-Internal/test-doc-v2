@@ -3,6 +3,7 @@
 
 # Organization team members
 arbeitandy
+# Add your GitHub username below if it's different from arbeitandy
 
 # Partners
 partneruser1
