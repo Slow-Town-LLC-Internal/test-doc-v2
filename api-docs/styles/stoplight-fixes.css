@@ -1,17 +1,23 @@
 /* Stoplight Elements style fixes */
 
 /* Light theme adjustments */
-:root {
+:root,
+.sl-elements-light {
   --sl-color-primary: #0284c7 !important;
   --sl-color-primary-dark: #0369a1 !important;
 }
 
 /* Dark theme adjustments */
-.dark {
+.dark,
+.sl-elements-dark {
   --sl-color-primary: #38bdf8 !important;
   --sl-color-primary-dark: #0ea5e9 !important;
   --sl-color-text: rgba(255, 255, 255, 0.9) !important;
   --sl-color-background: rgb(30, 30, 30) !important;
+  --sl-color-text-body: rgba(255, 255, 255, 0.8) !important;
+  --sl-color-background-body: rgb(18, 18, 18) !important;
+  --sl-color-background-code: rgb(38, 38, 38) !important;
+  --sl-color-background-code-inline: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Fix layout conflicts between Tailwind and Stoplight */
@@ -22,4 +28,24 @@
 .elements-container .sl-elements {
   height: 100% !important;
   min-height: calc(100vh - 4rem) !important;
+}
+
+/* Ensure contrast in dark mode */
+.sl-elements-dark .sl-code-viewer {
+  background-color: rgb(28, 28, 28) !important;
+}
+
+.sl-elements-dark .sl-code-viewer .sl-code {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Fix sidebar in dark mode */
+.sl-elements-dark .sl-sidebar {
+  background-color: rgb(24, 24, 24) !important;
+}
+
+/* Icons size adjustment */
+.elements-container svg.sl-icon {
+  max-width: 24px !important;
+  max-height: 24px !important;
 }
