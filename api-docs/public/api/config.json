@@ -1,0 +1,20 @@
+{
+  "features": {
+    "auth": {
+      "enabled": true,
+      "provider": "password",
+      "passwordProtected": true,
+      "apiUrl": "https://ta10k1h17i.execute-api.eu-central-1.amazonaws.com/stg/auth",
+      "tokenKey": "docs_auth_token",
+      "expiryKey": "docs_auth_expiry"
+    },
+    "theme": {
+      "darkMode": false,
+      "colorScheme": "blue"
+    }
+  },
+  "meta": {
+    "title": "API Documentation Platform",
+    "description": "Interactive API documentation for platform services"
+  }
+}

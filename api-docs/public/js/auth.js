@@ -18,14 +18,31 @@ let EXPIRY_KEY = 'docs_auth_expiry';
 // Load configuration values
 async function loadConfig() {
   try {
-    const response = await fetch('/api/config');
-    if (!response.ok) {
-      throw new Error('Failed to fetch config');
+    // First try the API endpoint (for development)
+    try {
+      const response = await fetch('/api/config');
+      if (response.ok) {
+        const config = await response.json();
+        if (config.features && config.features.auth) {
+          API_URL = config.features.auth.apiUrl || API_URL;
+          TOKEN_KEY = config.features.auth.tokenKey || TOKEN_KEY;
+          EXPIRY_KEY = config.features.auth.expiryKey || EXPIRY_KEY;
+          return;
+        }
+      }
+    } catch (e) {
+      console.log('API endpoint not available, trying static file');
     }
-    const config = await response.json();
+    
+    // Fallback to static JSON file (for production/GitHub Pages)
+    const staticResponse = await fetch('/api/config.json');
+    if (!staticResponse.ok) {
+      throw new Error('Failed to fetch config from static file');
+    }
+    const config = await staticResponse.json();
     
     // Set auth configuration from config file
-    if (config.features.auth) {
+    if (config.features && config.features.auth) {
       API_URL = config.features.auth.apiUrl || API_URL;
       TOKEN_KEY = config.features.auth.tokenKey || TOKEN_KEY;
       EXPIRY_KEY = config.features.auth.expiryKey || EXPIRY_KEY;
@@ -149,11 +166,26 @@ function initLoginForm() {
 // Check if auth is enabled in the config
 async function isAuthEnabled() {
   try {
-    const response = await fetch('/api/config');
-    if (!response.ok) {
-      throw new Error('Failed to fetch config');
+    // First try the API endpoint (for development)
+    try {
+      const response = await fetch('/api/config');
+      if (response.ok) {
+        const config = await response.json();
+        if (config.features && config.features.auth) {
+          return config.features.auth.enabled && 
+                 config.features.auth.provider === 'password';
+        }
+      }
+    } catch (e) {
+      console.log('API endpoint not available for auth check, trying static file');
     }
-    const config = await response.json();
+    
+    // Fallback to static JSON file (for production/GitHub Pages)
+    const staticResponse = await fetch('/api/config.json');
+    if (!staticResponse.ok) {
+      throw new Error('Failed to fetch config from static file');
+    }
+    const config = await staticResponse.json();
     return config.features.auth.enabled && 
            config.features.auth.provider === 'password';
   } catch (error) {
