@@ -1,0 +1,9 @@
+# Allowed GitHub handles for API documentation
+# Format: one GitHub handle per line
+
+# Organization team members
+arbeitandy
+
+# Partners
+partneruser1
+partneruser2
