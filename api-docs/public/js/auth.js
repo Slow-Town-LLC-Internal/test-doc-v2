@@ -22,9 +22,18 @@ function getBasePath() {
     return window.basePath;
   }
   
-  // Otherwise try to detect if we're on GitHub Pages
-  const isGitHubPages = window.location.hostname.includes('github.io');
-  return isGitHubPages ? '/test-doc-v2' : '';
+  // Try to detect repository name from URL path
+  if (window.location.hostname.includes('github.io')) {
+    // Extract repository name from path
+    const pathParts = window.location.pathname.split('/');
+    // The first part after the hostname should be the repo name
+    if (pathParts.length > 1 && pathParts[1]) {
+      return '/' + pathParts[1];
+    }
+  }
+  
+  // Default fallback
+  return '';
 }
 
 // Load configuration values
