@@ -15,12 +15,26 @@ let API_URL = '';
 let TOKEN_KEY = 'docs_auth_token';
 let EXPIRY_KEY = 'docs_auth_expiry';
 
+// Get the base path for GitHub Pages
+function getBasePath() {
+  // If window.basePath is defined by our helper script, use that
+  if (typeof window.basePath !== 'undefined') {
+    return window.basePath;
+  }
+  
+  // Otherwise try to detect if we're on GitHub Pages
+  const isGitHubPages = window.location.hostname.includes('github.io');
+  return isGitHubPages ? '/test-doc-v2' : '';
+}
+
 // Load configuration values
 async function loadConfig() {
   try {
+    const basePath = getBasePath();
+    
     // First try the API endpoint (for development)
     try {
-      const response = await fetch('/api/config');
+      const response = await fetch(`${basePath}/api/config`);
       if (response.ok) {
         const config = await response.json();
         if (config.features && config.features.auth) {
@@ -35,7 +49,7 @@ async function loadConfig() {
     }
     
     // Fallback to static JSON file (for production/GitHub Pages)
-    const staticResponse = await fetch('/api/config.json');
+    const staticResponse = await fetch(`${basePath}/api/config.json`);
     if (!staticResponse.ok) {
       throw new Error('Failed to fetch config from static file');
     }
@@ -113,8 +127,8 @@ async function authenticate(password) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(EXPIRY_KEY, expiryTime.toString());
     
-    // Redirect to docs
-    window.location.href = '/';
+    // Redirect to docs with correct base path
+    window.location.href = getBasePath() + '/';
     
     return true;
   } catch (error) {
@@ -135,7 +149,7 @@ async function authenticate(password) {
 function logout() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(EXPIRY_KEY);
-  window.location.href = '/login.html';
+  window.location.href = getBasePath() + '/login.html';
 }
 
 // Initialize login form
@@ -166,9 +180,11 @@ function initLoginForm() {
 // Check if auth is enabled in the config
 async function isAuthEnabled() {
   try {
+    const basePath = getBasePath();
+    
     // First try the API endpoint (for development)
     try {
-      const response = await fetch('/api/config');
+      const response = await fetch(`${basePath}/api/config`);
       if (response.ok) {
         const config = await response.json();
         if (config.features && config.features.auth) {
@@ -181,7 +197,7 @@ async function isAuthEnabled() {
     }
     
     // Fallback to static JSON file (for production/GitHub Pages)
-    const staticResponse = await fetch('/api/config.json');
+    const staticResponse = await fetch(`${basePath}/api/config.json`);
     if (!staticResponse.ok) {
       throw new Error('Failed to fetch config from static file');
     }
@@ -216,12 +232,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // If already authenticated, redirect to docs
     if (isAuthenticated()) {
-      window.location.href = '/';
+      window.location.href = getBasePath() + '/';
     }
   } else {
     // On protected pages, check authentication
     if (!isAuthenticated()) {
-      window.location.href = '/login.html';
+      window.location.href = getBasePath() + '/login.html';
     }
     
     // Add logout button functionality

@@ -5,6 +5,9 @@ const nextConfig = {
   // For GitHub Pages deployment
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
   
+  // Set asset prefix for GitHub Pages
+  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  
   // Export as static site
   output: 'export',
   

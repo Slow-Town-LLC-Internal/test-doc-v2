@@ -22,9 +22,9 @@ export function Layout({ children, title = 'API Documentation', requireAuth = tr
         <title>{fullTitle}</title>
         <meta name="description" content={config.meta.description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/favicon.ico`} />
         <script 
-          src="/js/auth.js" 
+          src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/js/auth.js`}
           defer 
           id="auth-script"
           data-check-exists="true"
