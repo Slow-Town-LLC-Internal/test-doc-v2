@@ -14,36 +14,6 @@
       "localPath": "/Users/arbeitandy/src/tmprepos/prisma",
       "generatorType": "typescript",
       "generatorCommand": "npm run generate:spec"
-    },
-    {
-      "id": "waltid-wallet-api",
-      "name": "WaltID Wallet API",
-      "specPath": "/api-specs/waltid-wallet-api.json",
-      "sourceRepo": "https://github.com/walt-id/waltid-identity",
-      "localPath": "/Users/arbeitandy/src/repos/waltid-identity",
-      "servicePath": "waltid-services/waltid-wallet-api",
-      "generatorType": "kotlin",
-      "generatorCommand": "./gradlew generateOpenApiDocs"
-    },
-    {
-      "id": "waltid-verifier-api",
-      "name": "WaltID Verifier API",
-      "specPath": "/api-specs/waltid-verifier-api.json",
-      "sourceRepo": "https://github.com/walt-id/waltid-identity",
-      "localPath": "/Users/arbeitandy/src/repos/waltid-identity",
-      "servicePath": "waltid-services/waltid-verifier-api",
-      "generatorType": "kotlin",
-      "generatorCommand": "./gradlew generateOpenApiDocs"
-    },
-    {
-      "id": "waltid-issuer-api",
-      "name": "WaltID Issuer API",
-      "specPath": "/api-specs/waltid-issuer-api.json",
-      "sourceRepo": "https://github.com/walt-id/waltid-identity",
-      "localPath": "/Users/arbeitandy/src/repos/waltid-identity",
-      "servicePath": "waltid-services/waltid-issuer-api",
-      "generatorType": "kotlin",
-      "generatorCommand": "./gradlew generateOpenApiDocs"
     }
   ]
 }
