@@ -3,6 +3,13 @@
  * This script handles password-based authentication for the docs site
  */
 
+// Prevent multiple script execution
+if (window.docsAuthInitialized) {
+  // Script already loaded and initialized, exit early
+  console.log('Auth script already initialized, skipping.');
+} else {
+  window.docsAuthInitialized = true;
+
 // Configuration - replace with your own values
 const API_URL = 'https://your-api-gateway-url.execute-api.region.amazonaws.com/stage/auth';
 const TOKEN_KEY = 'docs_auth_token';
@@ -119,8 +126,32 @@ function initLoginForm() {
   });
 }
 
+// Check if auth is enabled in the config
+async function isAuthEnabled() {
+  try {
+    const response = await fetch('/api/config');
+    if (!response.ok) {
+      throw new Error('Failed to fetch config');
+    }
+    const config = await response.json();
+    return config.features.auth.enabled && 
+           config.features.auth.provider === 'password';
+  } catch (error) {
+    console.error('Error fetching config:', error);
+    return false; // Default to not requiring auth if config can't be loaded
+  }
+}
+
 // Check authentication on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  // First check if auth is enabled at all
+  const authEnabled = await isAuthEnabled();
+  
+  // If auth is disabled, don't do any redirects
+  if (!authEnabled) {
+    return;
+  }
+  
   // Check if we're on the login page
   const isLoginPage = window.location.pathname.includes('login.html');
   
@@ -145,3 +176,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
+
+// Close the "if (window.docsAuthInitialized)" block
+}

@@ -101,14 +101,21 @@ This project follows a phased approach to implementation, with clear separation 
 ### Authentication System (Phase 2)
 #### Client-Side Components:
 - **`api-docs/public/login.html`**: Login page with password form
-- **`api-docs/public/js/auth.js`**: Client-side authentication script
+- **`api-docs/public/js/auth.js`**: Client-side authentication script with auto-initialization protection
 - **`api-docs/components/PasswordProtected.tsx`**: React component for route protection
 - **`api-docs/lib/config.ts`**: Configuration utilities including auth state
+- **`api-docs/config/app-config.json`**: Configuration file with auth settings (enabled/disabled toggle)
 
 #### Server-Side Components:
 - **`terraform/auth.tf`**: Terraform configuration for AWS infrastructure
 - **`terraform/files/docs_auth_lambda.js`**: Lambda function for password verification
 - **`terraform/files/generate-password-hash.js`**: Utility for generating password hashes
+
+#### Authentication Flow:
+1. `app-config.json` controls whether auth is enabled via `features.auth.enabled`
+2. `PasswordProtected.tsx` checks this setting on the React side
+3. `auth.js` independently checks this setting for non-React pages
+4. Both components skip auth checks when `features.auth.enabled` is `false`
 
 ### Automated Spec Collection (Phase 3 - Planned)
 - **`.github/workflows/collect-specs.yml`**: GitHub Actions workflow for API spec collection (placeholder)
@@ -182,19 +189,21 @@ This project follows a phased approach to implementation, with clear separation 
    const API_URL = 'https://your-api-gateway-url/auth';  // Get this from terraform output
    ```
 
-7. **Enable authentication in configuration:**
-   Update `api-docs/config/app-config.json`:
+7. **Authentication configuration:**
+   Update `api-docs/config/app-config.json` to enable or disable authentication:
+   
    ```json
    {
      "features": {
        "auth": {
-         "enabled": true,
-         "provider": "password",
-         "passwordProtected": true
+         "enabled": true,  // Set to false to disable authentication completely
+         "provider": "password"
        }
      }
    }
    ```
+   
+   **Important**: When `auth.enabled` is set to `false`, the application will skip all authentication checks and allow direct access to documentation.
 
 ### Deployment to GitHub Pages
 
@@ -239,6 +248,20 @@ To change the password:
 ## Troubleshooting & Common Issues
 
 ### Authentication Issues
+
+#### Enabling/Disabling Authentication
+To toggle authentication on or off:
+1. Update `api-docs/config/app-config.json` and set `features.auth.enabled` to `true` or `false`
+2. If you're still being redirected to the login page when auth is disabled:
+   - Clear your browser's localStorage for the site
+   - Ensure you've restarted the development server after changing the config
+   - Check browser console for any JavaScript errors
+
+#### Client-Side Authentication Script Issues
+If you encounter errors related to `auth.js` script (like "Identifier has already been declared"):
+1. The script is designed to prevent multiple initialization using `window.docsAuthInitialized` flag
+2. The script is included from both `login.html` and `Layout.tsx`, but should only execute once
+3. Script first checks if auth is enabled via API config before attempting any redirects
 
 #### API Gateway CORS Errors
 If you see CORS errors in the browser console when trying to authenticate:

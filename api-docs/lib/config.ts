@@ -32,16 +32,7 @@ async function fetchConfig(): Promise<AppConfig> {
     return await response.json() as AppConfig;
   } catch (error) {
     console.error('Error fetching config:', error);
-    return {
-      ...defaultConfig,
-      features: {
-        ...defaultConfig.features,
-        auth: {
-          ...defaultConfig.features.auth,
-          enabled: true // Force enable for testing
-        }
-      }
-    };
+    return defaultConfig;
   }
 }
 
@@ -50,18 +41,9 @@ export function getAppConfig(): AppConfig {
   if (typeof window !== 'undefined') {
     // We're on the client side
     if (!cachedConfig) {
-      // For client side, use a hardcoded config for immediate response
+      // For client side, use default config for immediate response
       // and trigger fetch in background
-      cachedConfig = {
-        ...defaultConfig,
-        features: {
-          ...defaultConfig.features,
-          auth: {
-            ...defaultConfig.features.auth,
-            enabled: true // Force enable for testing
-          }
-        }
-      };
+      cachedConfig = { ...defaultConfig };
       
       // Fetch the real config and update the cache
       fetchConfig().then(config => {
@@ -101,6 +83,5 @@ export function isAuthEnabled(): boolean {
 export function isPasswordAuthEnabled(): boolean {
   const config = getAppConfig();
   return config.features.auth.enabled && 
-         config.features.auth.provider === 'password' &&
-         config.features.auth.passwordProtected === true;
+         config.features.auth.provider === 'password';
 }
