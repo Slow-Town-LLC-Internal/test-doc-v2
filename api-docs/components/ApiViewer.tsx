@@ -20,8 +20,9 @@ export function ApiViewer({ specUrl }: ApiViewerProps) {
   // Handle client-side rendering and avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
-    // Set the full URL to the API spec
-    setApiUrl(`${window.location.origin}${specUrl}`);
+    // Set the full URL to the API spec, accounting for basePath
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    setApiUrl(`${window.location.origin}${basePath}${specUrl}`);
   }, [specUrl]);
 
   // Only render on client side
