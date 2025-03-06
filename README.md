@@ -78,7 +78,7 @@ This project follows a phased approach to implementation, with clear separation 
 - GitHub Actions workflow for automatic deployment
 - Static site generation compatible with GitHub Pages
 - Authentication support for protected documentation
-- Responsive design with light/dark mode
+- Base path handling for GitHub Pages subdirectory structure
 - Production-ready documentation portal
 
 ## Key Design Considerations
@@ -378,7 +378,7 @@ If you see hydration mismatch errors:
 
 ## Future Enhancements
 
-For Phase 3 and beyond, consider:
+For next phases, consider:
 
 1. **Multiple API Specs Management**:
    - Automated discovery of API specs in repositories
@@ -464,50 +464,63 @@ api-docs/
 
 ## Technical Solutions Implemented
 
-### Server-Side Rendering Issues
+### GitHub Pages Base Path Handling
+- Added environment variables for production base path configuration
+- Implemented dynamic base path detection in client-side code
+- Updated all asset references to include base path when deployed
+- Created fallback mechanisms for static HTML files
 
-Solved Mermaid SSR issues with:
-- Dynamic imports with Next.js `dynamic()` function
-- Client-side only rendering using `useEffect`
-- Component state to track client-side rendering
+### Server-Side Rendering Issues
+- Solved Stoplight Elements SSR issues with Next.js dynamic imports
+- Implemented client-side only rendering using `useEffect` hooks
+- Added component state to track client-side rendering and prevent hydration mismatches
+
+### Authentication for Static Sites
+- Created a JWT-based authentication system compatible with static hosting
+- Implemented client-side protection for routes without server requirements
+- Added detection for authentication status with secure token storage
+- Built support for toggling authentication on/off via configuration
 
 ### Style Conflict Resolution
+- Resolved dark mode inconsistencies in Stoplight Elements
+- Applied targeted CSS overrides for documentation components
+- Implemented custom theme classes for Stoplight compatibility
+- Created responsive layouts for both desktop and mobile viewing
 
-Fixed styling conflicts between components:
-- Isolated CSS rules with specific selectors
-- Applied `!important` flags to critical styles
-- Used inline styles for component-specific styling
-- Implemented style reset for Stoplight Elements
+### API Specification Management
+- Added support for multiple API specifications in a single interface
+- Created sample specification generator for development
+- Implemented configuration-based API source definition
+- Built flexible path handling for API specification loading
+- Added graceful error handling with fallback sample specs
 
-### API Specification Processing
+### Static Site Optimization
+- Configured Next.js for optimal static site generation
+- Implemented asset optimization for production builds
+- Created development utilities that work in both local and production environments
+- Ensured compatibility with GitHub Pages hosting requirements
 
-Enhanced API spec collection with:
-- Local file support with path resolution
-- Validation of OpenAPI specifications
-- Caching based on file hash
-- Graceful error handling for missing files
+## Planned Improvements for Phase 5
 
-### Integration with External Services
-
-Implemented flexible integration with:
-- Support for local and remote OpenAPI specs
-- Release tag detection and synchronization
-- Automated specification collection from repositories
-
-### UI/UX ###
-- light/dark mode switch
-- natively supported mobile navigation
-
-## Improvements
-
-1. **Feature Enhancements**
+1. **Navigation and User Experience**
+   - Make header navigation dynamic based on available APIs
    - Add search functionality across all documentation
-   - Implement versioned documentation
-   - Add language-specific code samples
-   - Include testing tools for API endpoints
+   - Implement breadcrumbs for better navigation
+   - Add mobile optimizations for API documentation
 
-2. **Documentation Expansion**
-   - Add more API flow examples
+2. **Custom Domain Support**
+   - Move from GitHub Pages subdirectory to custom domain
+   - Update base path configuration for root path serving
+   - Configure SSL certificates for secure connections
+   - Update CORS settings in API Gateway
+
+3. **Enhance Authentication**
+   - Add support for GitHub OAuth authentication
+   - Create role-based access for different API specs
+   - Add whitelisting for organization members
+
+4. **Documentation Expansion**
+   - Add more API flow examples with Mermaid diagrams
    - Include end-to-end workflow documentation
    - Create developer guides for common scenarios
-   - Add troubleshooting sections
+   - Add comprehensive troubleshooting sections
