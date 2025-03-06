@@ -33,12 +33,19 @@ Our API documentation platform follows a phased implementation approach, with a 
 - Custom login page
 - On/off toggle for authentication
 
-### Phase 3: Automated Spec Collection (Future)
-- GitHub Actions workflow to scan organization repositories
+### Phase 3: Automated Spec Collection ✅
+- Local spec collection tools implemented with Go
 - Automatic spec validation and processing
+- TypeScript wrapper for Go implementation
+- Configurable sources with repository paths and generator commands
+- Support for multiple API types (TypeScript, Kotlin)
+
+### Phase 4: CI/CD Integration (Planned)
+- GitHub Actions workflow to run spec collection (currently disabled for testing)
+- Automated repository scanning and checkout
 - Support for both manual triggering and schedule-based execution
 - Rebuild and deployment pipeline
-- Optional Golang scripts for performance-critical operations
+- Access management for private repositories
 
 ## Project Roadmap & Implementation Status
 
@@ -60,12 +67,19 @@ This project follows a phased approach to implementation, with clear separation 
 - Custom login page with error handling
 - Logout functionality in header
 
-### Phase 3: Automated Spec Collection (Planned)
-- GitHub Actions workflow to scan organization repositories
+### Phase 3: Automated Spec Collection ✅
+- Local spec collection tools implemented with Go
 - Automatic API spec validation and processing
+- TypeScript wrapper for Go implementation
+- Configurable sources with repository paths and generator commands
+- Support for multiple API types (TypeScript, Kotlin)
+
+### Phase 4: CI/CD Integration (Planned)
+- GitHub Actions workflow to run spec collection (currently disabled for testing)
+- Automated repository scanning and checkout
 - Support for both manual triggering and schedule-based execution
 - Rebuild and deployment pipeline
-- Optional Golang scripts for performance-critical operations
+- Access management for private repositories
 
 ## Key Design Considerations
 
@@ -117,17 +131,20 @@ This project follows a phased approach to implementation, with clear separation 
 3. `auth.js` independently checks this setting for non-React pages
 4. Both components skip auth checks when `features.auth.enabled` is `false`
 
-### Automated Spec Collection (Phase 3 - Planned)
-- **`.github/workflows/collect-specs.yml`**: GitHub Actions workflow for API spec collection (placeholder)
-- **`scripts/collect-specs.ts`**: API specification collection script (placeholder)
+### Automated Spec Collection (Phase 3 ✅)
+- **`api-docs/scripts/collect-specs.go`**: Go implementation for API spec collection
+- **`api-docs/scripts/collect-specs.ts`**: TypeScript wrapper for Go implementation
+- **`api-docs/config/sources.json`**: Configuration for API sources and generator commands
+- **`api-docs/.github/workflows/collect-specs.yml`**: GitHub Actions workflow (currently disabled for testing)
 
 ## Development & Deployment Guide
 
 ### Prerequisites
 - Node.js 16+ and npm/yarn
-- AWS account with appropriate permissions
-- Terraform CLI
+- AWS account with appropriate permissions (for auth features)
+- Terraform CLI (for auth features)
 - Git
+- Go 1.19+ (for spec collection)
 
 ### Local Development Setup
 
@@ -244,6 +261,46 @@ To change the password:
    cd terraform
    terraform apply
    ```
+
+### API Spec Collection
+
+To collect API specifications from source repositories:
+
+1. **Configure source repositories**:
+   Update `api-docs/config/sources.json` with the correct local paths to your repositories:
+   ```json
+   {
+     "apis": [
+       {
+         "id": "example-api",
+         "name": "Example API",
+         "specPath": "/api-specs/example-api.json",
+         "sourceRepo": "https://github.com/org/repo",
+         "localPath": "/path/to/local/clone",
+         "generatorType": "typescript",
+         "generatorCommand": "npm run generate:spec"
+       }
+     ]
+   }
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   cd api-docs
+   npm install
+   ```
+
+3. **Install Go**:
+   Make sure Go 1.19+ is installed on your system.
+
+4. **Run the collection script**:
+   ```bash
+   cd api-docs
+   npm run collect-specs
+   ```
+
+5. **Verify collected specs**:
+   Check the `api-docs/public/api-specs/` directory for the generated specification files.
 
 ## Troubleshooting & Common Issues
 
