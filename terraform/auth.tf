@@ -97,7 +97,7 @@ resource "aws_api_gateway_method" "docs_auth_post" {
   rest_api_id   = aws_api_gateway_rest_api.docs_api.id
   resource_id   = aws_api_gateway_resource.docs_auth.id
   http_method   = "POST"
-  authorization_type = "NONE"
+  authorization = "NONE"
 }
 
 # API Gateway integration with Lambda
@@ -124,7 +124,7 @@ resource "aws_api_gateway_method" "docs_auth_options" {
   rest_api_id   = aws_api_gateway_rest_api.docs_api.id
   resource_id   = aws_api_gateway_resource.docs_auth.id
   http_method   = "OPTIONS"
-  authorization_type = "NONE"
+  authorization = "NONE"
 }
 
 resource "aws_api_gateway_integration" "docs_auth_options" {
@@ -171,11 +171,19 @@ resource "aws_api_gateway_deployment" "docs_api" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.docs_api.id
-  stage_name  = var.environment
+  # Using a separate stage resource instead of stage_name
+  # to follow current best practices
 
   lifecycle {
     create_before_destroy = true
   }
+}
+
+# Create a separate API Gateway stage resource
+resource "aws_api_gateway_stage" "docs_api" {
+  deployment_id = aws_api_gateway_deployment.docs_api.id
+  rest_api_id   = aws_api_gateway_rest_api.docs_api.id
+  stage_name    = var.environment
 }
 
 # Get custom domain information if available
@@ -189,13 +197,14 @@ resource "aws_api_gateway_base_path_mapping" "docs_api" {
   count = var.use_custom_domain ? 1 : 0
   
   api_id      = aws_api_gateway_rest_api.docs_api.id
-  stage_name  = aws_api_gateway_deployment.docs_api.stage_name
+  # Omitting stage_name as it's deprecated
+  # AWS will use the default stage if not specified
   domain_name = data.aws_api_gateway_domain_name.api_domain[0].domain_name
   base_path   = "docs"
 }
 
 # Output values
 output "docs_auth_api_url" {
-  value = var.use_custom_domain ? "https://${var.api_domain_name}/docs/auth" : "${aws_api_gateway_deployment.docs_api.invoke_url}/auth"
+  value = var.use_custom_domain ? "https://${var.api_domain_name}/docs/auth" : "${aws_api_gateway_stage.docs_api.invoke_url}/auth"
   description = "URL for the documentation authentication API"
 }

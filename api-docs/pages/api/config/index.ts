@@ -8,8 +8,9 @@ const defaultConfig: AppConfig = {
   features: {
     auth: {
       enabled: false, // Default to disabled for safety
-      provider: 'github',
-      whitelist: 'whitelist.txt'
+      provider: 'password',
+      tokenKey: 'docs_auth_token',
+      expiryKey: 'docs_auth_expiry'
     },
     theme: {
       darkMode: true,

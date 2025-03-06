@@ -2,6 +2,9 @@ export interface AuthConfig {
   enabled: boolean;
   provider: string;
   passwordProtected?: boolean;
+  apiUrl?: string;
+  tokenKey?: string;
+  expiryKey?: string;
 }
 
 export interface ThemeConfig {
