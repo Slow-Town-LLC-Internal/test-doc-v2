@@ -115,10 +115,11 @@ This project follows a phased approach to implementation, with clear separation 
 ### Authentication System (Phase 2)
 #### Client-Side Components:
 - **`api-docs/public/login.html`**: Login page with password form
-- **`api-docs/public/js/auth.js`**: Client-side authentication script with auto-initialization protection
+- **`api-docs/public/js/auth.js`**: Client-side authentication script with dynamic config loading
 - **`api-docs/components/PasswordProtected.tsx`**: React component for route protection
 - **`api-docs/lib/config.ts`**: Configuration utilities including auth state
-- **`api-docs/config/app-config.json`**: Configuration file with auth settings (enabled/disabled toggle)
+- **`api-docs/config/app-config.json`**: Configuration file with auth settings including API URL
+- **`api-docs/pages/api/config/index.ts`**: API endpoint to expose configuration to client
 
 #### Server-Side Components:
 - **`terraform/auth.tf`**: Terraform configuration for AWS infrastructure
@@ -126,10 +127,12 @@ This project follows a phased approach to implementation, with clear separation 
 - **`terraform/files/generate-password-hash.js`**: Utility for generating password hashes
 
 #### Authentication Flow:
-1. `app-config.json` controls whether auth is enabled via `features.auth.enabled`
-2. `PasswordProtected.tsx` checks this setting on the React side
-3. `auth.js` independently checks this setting for non-React pages
-4. Both components skip auth checks when `features.auth.enabled` is `false`
+1. `app-config.json` controls whether auth is enabled via `features.auth.enabled` and contains API URL
+2. Client-side scripts load configuration from `/api/config` endpoint to get auth settings
+3. `PasswordProtected.tsx` checks auth settings on the React side
+4. `auth.js` independently checks auth settings for non-React pages
+5. Both components skip auth checks when `features.auth.enabled` is `false`
+6. When authentication is needed, auth.js uses the API URL from config to send requests
 
 ### Automated Spec Collection (Phase 3 ✅)
 - **`api-docs/scripts/collect-specs.go`**: Go implementation for API spec collection
@@ -200,27 +203,42 @@ This project follows a phased approach to implementation, with clear separation 
    terraform apply
    ```
 
-6. **Update the API URL in the client-side auth script:**
-   ```javascript
-   // In api-docs/public/js/auth.js
-   const API_URL = 'https://your-api-gateway-url/auth';  // Get this from terraform output
+6. **Update the API URL in the application configuration:**
+   ```json
+   // In api-docs/config/app-config.json
+   {
+     "features": {
+       "auth": {
+         "enabled": true,
+         "provider": "password",
+         "passwordProtected": true,
+         "apiUrl": "https://your-api-gateway-url/auth"  // Get this from terraform output
+       }
+     }
+   }
    ```
 
 7. **Authentication configuration:**
-   Update `api-docs/config/app-config.json` to enable or disable authentication:
+   The `api-docs/config/app-config.json` file now contains all authentication settings:
    
    ```json
    {
      "features": {
        "auth": {
          "enabled": true,  // Set to false to disable authentication completely
-         "provider": "password"
+         "provider": "password",
+         "passwordProtected": true,
+         "apiUrl": "https://your-api-gateway-url/auth",  // API Gateway URL from terraform output
+         "tokenKey": "docs_auth_token",  // Local storage key for the JWT token
+         "expiryKey": "docs_auth_expiry"  // Local storage key for token expiration
        }
      }
    }
    ```
    
-   **Important**: When `auth.enabled` is set to `false`, the application will skip all authentication checks and allow direct access to documentation.
+   **Important**: 
+   - When `auth.enabled` is set to `false`, the application will skip all authentication checks and allow direct access to documentation
+   - The auth.js script now reads these configuration values from the /api/config endpoint
 
 ### Deployment to GitHub Pages
 
@@ -318,7 +336,9 @@ To toggle authentication on or off:
 If you encounter errors related to `auth.js` script (like "Identifier has already been declared"):
 1. The script is designed to prevent multiple initialization using `window.docsAuthInitialized` flag
 2. The script is included from both `login.html` and `Layout.tsx`, but should only execute once
-3. Script first checks if auth is enabled via API config before attempting any redirects
+3. Script first loads configuration from `/api/config` endpoint, including the API URL and storage keys
+4. Script then checks if auth is enabled via API config before attempting any redirects
+5. All auth configuration is centralized in `api-docs/config/app-config.json`
 
 #### API Gateway CORS Errors
 If you see CORS errors in the browser console when trying to authenticate:

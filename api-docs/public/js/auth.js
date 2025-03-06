@@ -10,10 +10,30 @@ if (window.docsAuthInitialized) {
 } else {
   window.docsAuthInitialized = true;
 
-// Configuration - replace with your own values
-const API_URL = 'https://your-api-gateway-url.execute-api.region.amazonaws.com/stage/auth';
-const TOKEN_KEY = 'docs_auth_token';
-const EXPIRY_KEY = 'docs_auth_expiry';
+// Configuration will be loaded from app config
+let API_URL = '';
+let TOKEN_KEY = 'docs_auth_token';
+let EXPIRY_KEY = 'docs_auth_expiry';
+
+// Load configuration values
+async function loadConfig() {
+  try {
+    const response = await fetch('/api/config');
+    if (!response.ok) {
+      throw new Error('Failed to fetch config');
+    }
+    const config = await response.json();
+    
+    // Set auth configuration from config file
+    if (config.features.auth) {
+      API_URL = config.features.auth.apiUrl || API_URL;
+      TOKEN_KEY = config.features.auth.tokenKey || TOKEN_KEY;
+      EXPIRY_KEY = config.features.auth.expiryKey || EXPIRY_KEY;
+    }
+  } catch (error) {
+    console.error('Error loading auth configuration:', error);
+  }
+}
 
 // Check if the user is authenticated
 function isAuthenticated() {
@@ -144,7 +164,10 @@ async function isAuthEnabled() {
 
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', async function() {
-  // First check if auth is enabled at all
+  // First load configuration
+  await loadConfig();
+  
+  // Then check if auth is enabled at all
   const authEnabled = await isAuthEnabled();
   
   // If auth is disabled, don't do any redirects

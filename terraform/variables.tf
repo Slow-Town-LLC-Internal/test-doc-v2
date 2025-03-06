@@ -13,6 +13,12 @@ variable "aws_region" {
   type        = string
 }
 
+variable "aws_profile" {
+  description = "AWS SSO profile to use"
+  type        = string
+  default     = null  # Will use environment variable if not specified
+}
+
 variable "docs_auth_jwt_secret" {
   description = "Secret key for signing JWT tokens for documentation authentication"
   type        = string
