@@ -22,14 +22,51 @@ const defaultConfig: AppConfig = {
 // Cache the config to avoid reading the file multiple times
 let cachedConfig: AppConfig | null = null;
 
+// Client-side config fetcher
+async function fetchConfig(): Promise<AppConfig> {
+  try {
+    const response = await fetch('/api/config');
+    if (!response.ok) {
+      throw new Error('Failed to fetch config');
+    }
+    return await response.json() as AppConfig;
+  } catch (error) {
+    console.error('Error fetching config:', error);
+    return {
+      ...defaultConfig,
+      features: {
+        ...defaultConfig.features,
+        auth: {
+          ...defaultConfig.features.auth,
+          enabled: true // Force enable for testing
+        }
+      }
+    };
+  }
+}
+
 // Client-side safe config getter
 export function getAppConfig(): AppConfig {
   if (typeof window !== 'undefined') {
     // We're on the client side
     if (!cachedConfig) {
-      // For client side, we'll use the default config
-      // In a real app, you'd fetch this via an API endpoint
-      cachedConfig = defaultConfig;
+      // For client side, use a hardcoded config for immediate response
+      // and trigger fetch in background
+      cachedConfig = {
+        ...defaultConfig,
+        features: {
+          ...defaultConfig.features,
+          auth: {
+            ...defaultConfig.features.auth,
+            enabled: true // Force enable for testing
+          }
+        }
+      };
+      
+      // Fetch the real config and update the cache
+      fetchConfig().then(config => {
+        cachedConfig = config;
+      });
     }
     return cachedConfig;
   } else {

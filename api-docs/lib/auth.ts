@@ -44,6 +44,15 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID || '',
       clientSecret: process.env.GITHUB_SECRET || '',
+      profile(profile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+          login: profile.login || profile.username || profile.name,
+        };
+      },
     }),
   ],
   callbacks: {
@@ -69,10 +78,10 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, user }) {
       // Add GitHub username to JWT token
-      if (account?.provider === 'github' && profile) {
-        token.login = profile.login;
+      if (account?.provider === 'github' && user?.login) {
+        token.login = user.login;
       }
       return token;
     },
