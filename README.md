@@ -138,7 +138,6 @@ This project follows a phased approach to implementation, with clear separation 
 - **`api-docs/config/sources.json`**: Configuration file defining available API specifications
 - **`api-docs/scripts/create-sample-specs.js`**: Script to generate sample API specs for development
 - **`api-docs/public/api-specs/`**: Directory containing OpenAPI specification files
-
 ## Development & Deployment Guide
 
 ### Prerequisites
@@ -219,7 +218,7 @@ This project follows a phased approach to implementation, with clear separation 
 
 7. **Authentication configuration:**
    The `api-docs/config/app-config.json` file now contains all authentication settings:
-   
+
    ```json
    {
      "features": {
@@ -234,8 +233,8 @@ This project follows a phased approach to implementation, with clear separation 
      }
    }
    ```
-   
-   **Important**: 
+
+   **Important**:
    - When `auth.enabled` is set to `false`, the application will skip all authentication checks and allow direct access to documentation
    - The auth.js script now reads these configuration values from the /api/config endpoint
 
