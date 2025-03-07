@@ -176,7 +176,9 @@ async function authenticate(password) {
     localStorage.setItem(EXPIRY_KEY, expiryTime.toString());
     
     // Redirect to docs with correct base path
-    window.location.href = getBasePath() + '/';
+    const basePath = getBasePath();
+    console.log('Login successful, redirecting with base path:', basePath);
+    window.location.href = `${window.location.origin}${basePath}/`;
     
     return true;
   } catch (error) {
@@ -197,7 +199,13 @@ async function authenticate(password) {
 function logout() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(EXPIRY_KEY);
-  window.location.href = getBasePath() + '/login.html';
+  
+  // Get the correct base path
+  const basePath = getBasePath();
+  console.log('Logging out, redirecting with base path:', basePath);
+  
+  // Redirect to login page with correct path
+  window.location.href = `${window.location.origin}${basePath}/login.html`;
 }
 
 // Initialize login form
@@ -319,12 +327,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // If already authenticated, redirect to docs
     if (isAuthenticated()) {
-      window.location.href = getBasePath() + '/';
+      const basePath = getBasePath();
+      console.log('Already authenticated, redirecting to docs with base path:', basePath);
+      window.location.href = `${window.location.origin}${basePath}/`;
     }
   } else {
     // On protected pages, check authentication
     if (!isAuthenticated()) {
-      window.location.href = getBasePath() + '/login.html';
+      const basePath = getBasePath();
+      console.log('Not authenticated, redirecting to login with base path:', basePath);
+      window.location.href = `${window.location.origin}${basePath}/login.html`;
     }
     
     // Add logout button functionality
