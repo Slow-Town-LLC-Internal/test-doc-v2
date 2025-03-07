@@ -216,8 +216,8 @@ This project follows a phased approach to implementation, with clear separation 
    }
    ```
 
-7. **Authentication configuration:**
-   The `api-docs/config/app-config.json` file now contains all authentication settings:
+7. **Application Configuration:**
+   The `api-docs/config/app-config.json` file now contains all application settings:
 
    ```json
    {
@@ -229,14 +229,40 @@ This project follows a phased approach to implementation, with clear separation 
          "apiUrl": "https://your-api-gateway-url/auth",  // API Gateway URL from terraform output
          "tokenKey": "docs_auth_token",  // Local storage key for the JWT token
          "expiryKey": "docs_auth_expiry"  // Local storage key for token expiration
+       },
+       "theme": {
+         "darkMode": false,
+         "colorScheme": "blue"
+       }
+     },
+     "meta": {
+       "title": "API Documentation Platform",
+       "description": "Interactive API documentation for platform services"
+     },
+     "deployment": {
+       "currentEnvironment": "development",  // Can be set to development, staging, production, etc.
+       "environments": {
+         "development": {
+           "baseUrl": "http://localhost:3000",
+           "basePath": ""
+         },
+         "staging": {
+           "baseUrl": "https://your-staging-domain.github.io",
+           "basePath": "/repo-name"
+         },
+         "production": {
+           "baseUrl": "https://your-production-domain.github.io",
+           "basePath": "/repo-name"
+         }
        }
      }
    }
    ```
 
    **Important**:
-   - When `auth.enabled` is set to `false`, the application will skip all authentication checks and allow direct access to documentation
-   - The auth.js script now reads these configuration values from the /api/config endpoint
+   - Authentication settings control whether and how authentication is enforced
+   - Deployment settings control URL generation and path resolution
+   - The auth.js script and ApiViewer component now use these settings to correctly work in all environments
 
 ### Deployment to GitHub Pages
 
@@ -253,6 +279,23 @@ This project follows a phased approach to implementation, with clear separation 
    - If using a custom domain, enter it in the Custom domain field
 
 3. **Updating Configuration for Deployment:**
+   - Update the `deployment` section in `api-docs/config/app-config.json` with your specific environment details:
+     ```json
+     "deployment": {
+       "environments": {
+         "production": {
+           "baseUrl": "https://your-organization.github.io",
+           "basePath": "/your-repository-name"
+         }
+       }
+     }
+     ```
+   - Set the environment for the GitHub workflow by adding to your workflow file:
+     ```yaml
+     env:
+       APP_ENVIRONMENT: production
+       REPOSITORY_NAME: your-repository-name
+     ```
    - Update your API Gateway URL in `api-docs/config/app-config.json` under `features.auth.apiUrl`
    - If using a custom domain, set the appropriate CORS headers in your API Gateway configuration
    - Test authentication flow to ensure correct configuration after deployment
@@ -323,21 +366,59 @@ To create and manage API specifications:
 
 ## Troubleshooting & Common Issues
 
-### Deployment Path Resolution
+### Multi-Environment Configuration
 
-#### GitHub Pages Repository Path Issues
-When deploying to GitHub Pages, you may encounter path-related issues:
-1. Make sure the Next.js configuration correctly handles the repository name
-2. Check browser console for 404 errors on scripts and static assets
-3. If you deploy to a different repository, the base path detection should handle it automatically
-4. The login.html page uses special path detection code for GitHub Pages environments
+The application supports deployment to multiple environments through a centralized configuration approach:
 
-#### Authentication and Path Resolution
-Authentication on GitHub Pages requires careful path handling:
-1. The static config file must be available at `/api/config.json`
-2. All API requests must use absolute URLs with the correct base path
-3. Redirects must include the base path to avoid losing the repository context
-4. Browser console logs provide detailed information about path detection and API URL resolution
+#### Environment Configuration
+In `api-docs/config/app-config.json`, a `deployment` section defines configurations for different environments:
+
+```json
+{
+  "deployment": {
+    "currentEnvironment": "development",
+    "environments": {
+      "development": {
+        "baseUrl": "http://localhost:3000",
+        "basePath": ""
+      },
+      "staging": {
+        "baseUrl": "https://slow-town-llc-internal.github.io",
+        "basePath": "/test-doc-v2"
+      },
+      "production": {
+        "baseUrl": "https://your-org.github.io",
+        "basePath": "/your-repo-name"
+      }
+    }
+  }
+}
+```
+
+#### Setting Environment Configuration
+You can specify which environment to use in several ways:
+
+1. **In app-config.json**:
+   - Set `deployment.currentEnvironment` to the desired environment name
+
+2. **Via environment variable**:
+   - When building or running: `APP_ENVIRONMENT=staging npm run build`
+   - In GitHub Actions workflow: Add `env: { APP_ENVIRONMENT: 'production' }`
+
+3. **Auto-detection (fallback)**:
+   - The application will try to detect the environment based on the hostname
+   - `localhost` → development
+   - `slow-town-llc-internal.github.io` → staging
+   - `laughing-adventure-w6ko5ze.pages.github.io` → production
+   - Other `github.io` domains → auto-detected from URL path
+
+#### Path Resolution and URL Generation
+The configuration system manages URL generation and path resolution:
+
+1. All redirects and API calls use the configured base URL and path
+2. Authentication flow correctly uses environment-specific paths
+3. API specs are loaded from the correct paths for each environment
+4. Login and logout redirects properly maintain environment context
 
 ### Authentication System Architecture
 
@@ -367,12 +448,12 @@ To toggle authentication on or off:
    - Check browser console for any JavaScript errors
 
 #### Path Resolution for Authentication Files
-The authentication system needs proper path resolution to function correctly:
-1. The `auth.js` script must be loaded with the correct base path
-   - In Layout.tsx: `src={${process.env.NODE_ENV === 'production' ? `/${process.env.REPOSITORY_NAME}` : ''}/js/auth.js}`
-2. The favicon.ico and other static assets must also use the dynamic path
-   - Use the same pattern for all static resources: `${process.env.NODE_ENV === 'production' ? `/${process.env.REPOSITORY_NAME}` : ''}/path/to/resource`
-3. The Next.js config handles this automatically for most resources, but explicit paths need manual handling
+The authentication system uses the environment configuration for path resolution:
+
+1. The configuration-based URL generation ensures correct paths in all environments
+2. Static assets, login redirects, and API calls all use the same configuration
+3. The `getConfiguredUrl()` function in `auth.js` builds URLs based on the current environment
+4. Path resolution is now centralized and consistent across the application
 
 #### Client-Side Authentication Script Issues
 If you encounter errors related to `auth.js` script (like "Identifier has already been declared"):
@@ -513,10 +594,17 @@ api-docs/
 
 ## Technical Solutions Implemented
 
+### Multi-Environment Configuration System
+- Implemented centralized deployment configuration in app-config.json
+- Created environment-specific URL and path configuration
+- Added support for explicitly setting current environment via config or env variables
+- Developed fallback auto-detection for environments based on hostname
+- Built unified URL generation system using environment configuration
+
 ### GitHub Pages Base Path Handling
 - Implemented dynamic repository name detection for GitHub Pages URLs
-- Created auto-discovery of base paths based on deployment location
-- Updated all asset references to include base path when deployed
+- Created consistent base path resolution using deployment configuration
+- Updated all asset references to use the configuration-based URL generator
 - Added automatic path correction for static HTML files and JavaScript
 - Developed a unified path resolution strategy that works across all environments
 
@@ -552,12 +640,12 @@ api-docs/
 
 ## Planned Improvements for Phase 5
 
-1. **Configuration and Deployment**
-   - Add deployment configuration system to store GitHub Pages URL in config
-   - Implement centralized environment detection (dev/staging/production)
-   - Create automatic GitHub repository metadata collection
-   - Make base path and asset loading fully dynamic across environments
+1. **Advanced Configuration and Deployment**
    - Implement versioning for API specifications
+   - Add automatic detection of new environments
+   - Create visual UI for managing environment configurations
+   - Support service discovery for API endpoints
+   - Add environment-specific feature toggles
 
 2. **Navigation and User Experience**
    - Make header navigation dynamic based on available APIs
@@ -599,11 +687,12 @@ The API Documentation Platform has now reached a stable state with all major fea
    - Configurable on/off toggle
    - Browser storage with proper expiration
 
-3. **✅ GitHub Pages Deployment**:
+3. **✅ Multi-Environment Deployment**:
    - Automatic deployment via GitHub Actions
-   - Dynamic path handling for any repository name
-   - Static site generation with proper asset references
-   - Configuration correctly loaded in all environments
+   - Configuration-based environment settings
+   - Environment-specific URL and path handling
+   - Supports local development, staging, and production environments
+   - Graceful fallbacks for unknown environments
 
 4. **⏩ Ready for Real API Specifications**:
    - Sample API specification generator ready for testing

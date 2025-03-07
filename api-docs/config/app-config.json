@@ -16,5 +16,22 @@
   "meta": {
     "title": "API Documentation Platform",
     "description": "Interactive API documentation for platform services"
+  },
+  "deployment": {
+    "currentEnvironment": "development",
+    "environments": {
+      "development": {
+        "baseUrl": "http://localhost:3000",
+        "basePath": ""
+      },
+      "staging": {
+        "baseUrl": "https://slow-town-llc-internal.github.io",
+        "basePath": "/test-doc-v2"
+      },
+      "production": {
+        "baseUrl": "https://laughing-adventure-w6ko5ze.pages.github.io",
+        "basePath": "/"
+      }
+    }
   }
 }

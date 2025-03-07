@@ -9,6 +9,35 @@ const path = require('path');
 const repoName = process.env.REPOSITORY_NAME || 'test-doc-v2';
 const isProd = process.env.NODE_ENV === 'production';
 
+// Allow environment to be specified via environment variable
+// This can be set in GitHub Actions or local .env file
+// e.g., APP_ENVIRONMENT=staging npm run build
+const appEnvironment = process.env.APP_ENVIRONMENT || (isProd ? 'production' : 'development');
+console.log(`Building for environment: ${appEnvironment}`);
+
+// Update app-config.json with the specified environment
+try {
+  const configPath = path.join(__dirname, 'config', 'app-config.json');
+  if (fs.existsSync(configPath)) {
+    const configData = fs.readFileSync(configPath, 'utf8');
+    const config = JSON.parse(configData);
+    
+    // Set the current environment
+    if (!config.deployment) {
+      config.deployment = { environments: {} };
+    }
+    
+    config.deployment.currentEnvironment = appEnvironment;
+    console.log(`Setting currentEnvironment to: ${appEnvironment}`);
+    
+    // Write the updated config
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    console.log('✅ Updated app-config.json with environment setting');
+  }
+} catch (error) {
+  console.error('❌ Error updating environment in app-config.json:', error);
+}
+
 // If in production build, ensure static config file exists
 if (isProd) {
   // Make sure the public/api directory exists
@@ -95,9 +124,10 @@ const nextConfig = {
   // Required for GitHub Pages deployment
   trailingSlash: true,
 
-  // Make the repository name available to the application
+  // Make the repository name and environment available to the application
   env: {
     REPOSITORY_NAME: repoName,
+    APP_ENVIRONMENT: appEnvironment
   }
 };
 
