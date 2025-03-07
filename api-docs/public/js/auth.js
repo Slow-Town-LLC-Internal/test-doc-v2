@@ -28,11 +28,13 @@ function getBasePath() {
     const pathParts = window.location.pathname.split('/');
     // The first part after the hostname should be the repo name
     if (pathParts.length > 1 && pathParts[1]) {
+      console.log('Detected GitHub Pages repo path:', '/' + pathParts[1]);
       return '/' + pathParts[1];
     }
   }
   
-  // Default fallback
+  // Default fallback for local development
+  console.log('Using default empty base path (local development)');
   return '';
 }
 
@@ -54,8 +56,11 @@ async function loadConfig() {
           API_URL = config.features.auth.apiUrl || API_URL;
           TOKEN_KEY = config.features.auth.tokenKey || TOKEN_KEY;
           EXPIRY_KEY = config.features.auth.expiryKey || EXPIRY_KEY;
+          console.log('API URL set to:', API_URL);
           return;
         }
+      } else {
+        console.log('API endpoint returned error status:', response.status);
       }
     } catch (e) {
       console.log('API endpoint not available, trying static file:', e);
@@ -64,10 +69,36 @@ async function loadConfig() {
     // Fallback to static JSON file (for production/GitHub Pages)
     const staticConfigUrl = `${window.location.origin}${basePath}/api/config.json`;
     console.log('Trying to load config from static file:', staticConfigUrl);
-    const staticResponse = await fetch(staticConfigUrl);
+    const staticResponse = await fetch(staticConfigUrl, {
+      cache: 'no-store', // Prevent caching to ensure fresh config
+      headers: {
+        'pragma': 'no-cache',
+        'cache-control': 'no-cache'
+      }
+    });
+    
     if (!staticResponse.ok) {
-      throw new Error(`Failed to fetch config from static file: ${staticResponse.status} ${staticResponse.statusText}`);
+      console.error(`Failed to fetch config from static file: ${staticResponse.status} ${staticResponse.statusText}`);
+      // Try alternative path as last resort (direct from public folder)
+      const altConfigUrl = `${window.location.origin}${basePath}/api-config.json`;
+      console.log('Trying alternative config path:', altConfigUrl);
+      const altResponse = await fetch(altConfigUrl);
+      if (!altResponse.ok) {
+        throw new Error(`Failed to fetch config from all paths - static: ${staticResponse.status}, alt: ${altResponse.status}`);
+      }
+      const config = await altResponse.json();
+      console.log('Loaded config from alternative path');
+      
+      // Set auth configuration from config file
+      if (config.features && config.features.auth) {
+        API_URL = config.features.auth.apiUrl || API_URL;
+        TOKEN_KEY = config.features.auth.tokenKey || TOKEN_KEY;
+        EXPIRY_KEY = config.features.auth.expiryKey || EXPIRY_KEY;
+        console.log('API URL set to:', API_URL);
+      }
+      return;
     }
+    
     const config = await staticResponse.json();
     console.log('Loaded config from static file');
     
@@ -212,6 +243,8 @@ async function isAuthEnabled() {
           console.log('Auth enabled from API endpoint:', authEnabled);
           return authEnabled;
         }
+      } else {
+        console.log('API endpoint returned error status:', response.status);
       }
     } catch (e) {
       console.log('API endpoint not available for auth check, trying static file');
@@ -220,13 +253,42 @@ async function isAuthEnabled() {
     // Fallback to static JSON file (for production/GitHub Pages)
     const staticConfigUrl = `${window.location.origin}${basePath}/api/config.json`;
     console.log('Checking auth enabled from static file:', staticConfigUrl);
-    const staticResponse = await fetch(staticConfigUrl);
+    const staticResponse = await fetch(staticConfigUrl, {
+      cache: 'no-store', // Prevent caching to ensure fresh config
+      headers: {
+        'pragma': 'no-cache',
+        'cache-control': 'no-cache'
+      }
+    });
+    
     if (!staticResponse.ok) {
-      throw new Error(`Failed to fetch config from static file: ${staticResponse.status} ${staticResponse.statusText}`);
+      console.error(`Failed to fetch config from static file: ${staticResponse.status} ${staticResponse.statusText}`);
+      
+      // Try alternative path as last resort (direct from public folder)
+      const altConfigUrl = `${window.location.origin}${basePath}/api-config.json`;
+      console.log('Trying alternative config path for auth check:', altConfigUrl);
+      try {
+        const altResponse = await fetch(altConfigUrl);
+        if (altResponse.ok) {
+          const config = await altResponse.json();
+          const authEnabled = config.features?.auth?.enabled && 
+                config.features?.auth?.provider === 'password';
+          console.log('Auth enabled from alternative config:', authEnabled);
+          return authEnabled;
+        } else {
+          console.error('Alternative config file returned error:', altResponse.status);
+        }
+      } catch (e) {
+        console.error('Error fetching alternative config:', e);
+      }
+      
+      console.warn('Failed to load config from all paths, defaulting to auth disabled');
+      return false;
     }
+    
     const config = await staticResponse.json();
-    const authEnabled = config.features.auth.enabled && 
-           config.features.auth.provider === 'password';
+    const authEnabled = config.features?.auth?.enabled && 
+           config.features?.auth?.provider === 'password';
     console.log('Auth enabled from static file:', authEnabled);
     return authEnabled;
   } catch (error) {
