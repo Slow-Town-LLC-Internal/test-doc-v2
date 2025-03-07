@@ -25,11 +25,48 @@ let cachedConfig: AppConfig | null = null;
 // Client-side config fetcher
 async function fetchConfig(): Promise<AppConfig> {
   try {
-    const response = await fetch('/api/config');
-    if (!response.ok) {
-      throw new Error('Failed to fetch config');
+    // Determine base path based on environment or GitHub Pages URL structure
+    let basePath = '';
+    
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      // For GitHub Pages deployments, detect repo name from URL path
+      if (window.location.hostname.includes('github.io')) {
+        const pathParts = window.location.pathname.split('/');
+        if (pathParts.length > 1 && pathParts[1]) {
+          basePath = '/' + pathParts[1];
+        }
+      } else if (process.env.NODE_ENV === 'production') {
+        // For other production environments, use REPOSITORY_NAME env var
+        basePath = process.env.REPOSITORY_NAME ? `/${process.env.REPOSITORY_NAME}` : '';
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      // Server-side in production
+      basePath = process.env.REPOSITORY_NAME ? `/${process.env.REPOSITORY_NAME}` : '';
     }
-    return await response.json() as AppConfig;
+    
+    console.log('Using base path for config:', basePath);
+      
+    // First try API route in development
+    try {
+      const endpoint = `${basePath}/api/config`;
+      console.log('Fetching config from API endpoint:', endpoint);
+      const response = await fetch(endpoint);
+      if (response.ok) {
+        return await response.json() as AppConfig;
+      }
+    } catch (error) {
+      console.log('API endpoint not available, trying static file');
+    }
+    
+    // Fallback to static JSON file (for production/GitHub Pages)
+    const staticConfigUrl = `${basePath}/api/config.json`;
+    console.log('Fetching config from static file:', staticConfigUrl);
+    const staticResponse = await fetch(staticConfigUrl);
+    if (!staticResponse.ok) {
+      throw new Error(`Failed to fetch config from static file: ${staticResponse.status}`);
+    }
+    return await staticResponse.json() as AppConfig;
   } catch (error) {
     console.error('Error fetching config:', error);
     return defaultConfig;

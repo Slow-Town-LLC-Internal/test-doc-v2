@@ -18,6 +18,14 @@
       console.log('Detected base path:', window.basePath);
     })();
   </script>
+  <!-- First load the base path helper script -->
+  <script>
+    // Use the full path (not relative) to correctly reference the auth-basepath.js file
+    const basePathScriptSrc = window.location.origin + window.basePath + '/js/auth-basepath.js';
+    console.log('Loading base path helper from:', basePathScriptSrc);
+    document.write('<script src="' + basePathScriptSrc + '" id="auth-basepath-script"><\/script>');
+  </script>
+  <!-- Then load the main auth script -->
   <script>
     // Use the full path (not relative) to correctly reference the auth.js file
     const scriptSrc = window.location.origin + window.basePath + '/js/auth.js';

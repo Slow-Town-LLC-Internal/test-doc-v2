@@ -339,6 +339,23 @@ Authentication on GitHub Pages requires careful path handling:
 3. Redirects must include the base path to avoid losing the repository context
 4. Browser console logs provide detailed information about path detection and API URL resolution
 
+### Authentication System Architecture
+
+The authentication system is designed to work in both development and production environments:
+
+#### Development Mode (Next.js Server)
+1. In development, Next.js API routes are used to serve the configuration data
+2. The auth.js script fetches configuration from the `/api/config` endpoint  
+3. The API route reads from the app-config.json file and returns it to the client
+4. Path handling automatically detects development environment and uses root paths
+
+#### Production Mode (Static Export)
+1. During the build process, Next.js exports a static version of the site
+2. The build script automatically copies `app-config.json` to `public/api/config.json`
+3. The auth.js script first tries the API endpoint, then falls back to the static JSON file
+4. All path references include the repository name prefix for GitHub Pages
+5. The `isPasswordAuthEnabled()` function checks both the API and static config file
+
 ### Authentication Issues
 
 #### Enabling/Disabling Authentication
@@ -348,6 +365,14 @@ To toggle authentication on or off:
    - Clear your browser's localStorage for the site
    - Ensure you've restarted the development server after changing the config
    - Check browser console for any JavaScript errors
+
+#### Path Resolution for Authentication Files
+The authentication system needs proper path resolution to function correctly:
+1. The `auth.js` script must be loaded with the correct base path
+   - In Layout.tsx: `src={${process.env.NODE_ENV === 'production' ? `/${process.env.REPOSITORY_NAME}` : ''}/js/auth.js}`
+2. The favicon.ico and other static assets must also use the dynamic path
+   - Use the same pattern for all static resources: `${process.env.NODE_ENV === 'production' ? `/${process.env.REPOSITORY_NAME}` : ''}/path/to/resource`
+3. The Next.js config handles this automatically for most resources, but explicit paths need manual handling
 
 #### Client-Side Authentication Script Issues
 If you encounter errors related to `auth.js` script (like "Identifier has already been declared"):
@@ -361,6 +386,14 @@ If you encounter errors related to `auth.js` script (like "Identifier has alread
 If you see CORS errors in the browser console when trying to authenticate:
 1. Check that the API Gateway CORS configuration in Terraform (`auth.tf`) matches your GitHub Pages domain
 2. Ensure the `Access-Control-Allow-Origin` header is set properly in the Lambda response
+
+#### Config Not Found Errors
+If you see errors about missing configuration:
+1. Make sure the API route is working in development mode
+   - Check `/api/config` in your browser
+2. For production, verify that `public/api/config.json` exists after building
+   - The Next.js config should automatically copy this file
+3. Check browser console for the specific URLs being attempted
 
 #### JWT Token Validation Failures
 If authentication succeeds but you're immediately redirected to login:
